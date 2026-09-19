@@ -3,7 +3,8 @@ import { auth } from "@/lib/auth";
 import { db, candidates } from "@/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { uploadToCloudinary, isCloudinaryConfigured } from "@/lib/cloudinary";
+import { uploadToCloudinary, isCloudinaryConfigured, deleteFromCloudinary } from "@/lib/cloudinary";
+import { logError } from "@/lib/log-error";
 
 export async function PUT(
   req: NextRequest,
@@ -59,7 +60,7 @@ export async function PUT(
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("Update candidate error:", err);
+    logError("Update candidate", err);
     return NextResponse.json({ error: "Erreur serveur." }, { status: 500 });
   }
 }
@@ -74,8 +75,19 @@ export async function DELETE(
   }
 
   const { id } = await params;
+  const candidatId = parseInt(id);
 
-  await db.delete(candidates).where(eq(candidates.id, parseInt(id)));
+  const existing = await db
+    .select()
+    .from(candidates)
+    .where(eq(candidates.id, candidatId));
+  const candidat = existing[0];
+
+  if (candidat?.photo) {
+    await deleteFromCloudinary(candidat.photo);
+  }
+
+  await db.delete(candidates).where(eq(candidates.id, candidatId));
 
   return NextResponse.json({ success: true });
 }

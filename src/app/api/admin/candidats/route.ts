@@ -4,6 +4,7 @@ import { db, candidates } from "@/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { uploadToCloudinary, isCloudinaryConfigured } from "@/lib/cloudinary";
+import { logError } from "@/lib/log-error";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -93,7 +94,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, id: result[0].id }, { status: 201 });
   } catch (err) {
-    console.error("Create candidate error:", err);
+    logError("Create candidate", err);
     return NextResponse.json({ error: "Erreur serveur." }, { status: 500 });
   }
 }

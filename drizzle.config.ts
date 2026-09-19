@@ -2,7 +2,9 @@ import type { Config } from "drizzle-kit";
 import { config } from "dotenv";
 import { resolve } from "path";
 
-config({ path: resolve(process.cwd(), ".env.local"), override: true });
+try {
+  config({ path: resolve(process.cwd(), ".env.local"), override: true });
+} catch {}
 
 export default {
   schema: "./src/db/schema.ts",

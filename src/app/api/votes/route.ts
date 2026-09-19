@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, votes, candidates } from "@/db";
-import { eq } from "drizzle-orm";
-// import { uploadToCloudinary, isCloudinaryConfigured } from "@/lib/cloudinary"; // MODE MANUEL DÉSACTIVÉ
-// import { sendNewVoteNotification } from "@/lib/email"; // MODE MANUEL DÉSACTIVÉ
+import { eq, and } from "drizzle-orm";
+import { logError } from "@/lib/log-error";
 import { VOTE_PRICE } from "@/lib/constants";
 import { createFedaPayTransaction } from "@/lib/fedapay";
 
@@ -60,6 +59,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Vérifier l'unicité : pas de double vote pour le même candidat
+    const existingVote = await db
+      .select()
+      .from(votes)
+      .where(and(eq(votes.telephone, telephone.trim()), eq(votes.candidateId, candidatId)));
+    if (existingVote.length > 0) {
+      return NextResponse.json(
+        { error: "Vous avez déjà voté." },
+        { status: 409 }
+      );
+    }
+
     const montant = nombreVotes * VOTE_PRICE;
 
     // Créer le vote en attente
@@ -104,7 +115,7 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (err) {
-    console.error("Vote API error:", err);
+    logError("Vote API", err);
     return NextResponse.json(
       { error: "Erreur serveur. Réessayez." },
       { status: 500 }

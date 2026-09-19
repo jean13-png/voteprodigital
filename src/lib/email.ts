@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { logError } from "@/lib/log-error";
 
 function getResend() {
   if (!process.env.RESEND_API_KEY) return null;
@@ -82,7 +83,7 @@ export async function sendNewVoteNotification(vote: {
       `,
     });
   } catch (err) {
-    console.error("Email error:", err);
+    logError("Email send", err);
   }
 }
 
@@ -117,6 +118,6 @@ export async function sendVoteValidatedNotification(vote: {
       `,
     });
   } catch (err) {
-    console.error("Email error:", err);
+    logError("Email send", err);
   }
 }

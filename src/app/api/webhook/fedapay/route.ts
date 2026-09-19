@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { db, votes } from "@/db";
 import { eq } from "drizzle-orm";
+import { logError } from "@/lib/log-error";
 
 export async function POST(req: NextRequest) {
   try {
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (err) {
-    console.error("Webhook error:", err);
+    logError("Webhook", err);
     return NextResponse.json({ error: "Erreur webhook" }, { status: 500 });
   }
 }

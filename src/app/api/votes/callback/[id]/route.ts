@@ -3,6 +3,7 @@ import { db, votes, candidates } from "@/db";
 import { eq } from "drizzle-orm";
 import { getFedaPayTransaction } from "@/lib/fedapay";
 import { sendVoteValidatedNotification } from "@/lib/email";
+import { logError } from "@/lib/log-error";
 
 export async function GET(
   req: NextRequest,
@@ -77,7 +78,7 @@ export async function GET(
 
     return NextResponse.redirect(`${baseUrl}/vote/failed?reason=unknown`);
   } catch (err) {
-    console.error("Callback FedaPay error:", err);
+    logError("Callback FedaPay", err);
     return NextResponse.redirect(`${baseUrl}/vote/failed?reason=error`);
   }
 }

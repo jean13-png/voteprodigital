@@ -24,8 +24,8 @@
 | Catégorie | Gravité | Nombre |
 |-----------|---------|--------|
 | 🔴 Critique | Critical | 1 |
-| 🟠 Haute | High | 17 |
-| 🟡 Moyenne | Medium | 32 |
+| 🟠 Haute | High | 13 |
+| 🟡 Moyenne | Medium | 33 |
 | 🟢 Basse | Low | 8 |
 
 **Verdict global** : Plateforme fonctionnelle avec une bonne base architecturale, mais présentant des failles de sécurité critiques et un état de production non prêt.
@@ -36,30 +36,16 @@
 
 ### 🟠 HAUTE
 
-#### 2.1 — Logs d'erreurs non sécurisés
-Plusieurs API loguent des erreurs complètes via `console.error` (ex: `src/app/api/votes/route.ts:93`, `src/app/api/votes/callback/[id]/route.ts:80`). En production, cela peut exposer des stack traces et des détails internes.
+#### 2.1 — Logs, HTTPS, email, CSP, unicité, cascade ✅
 
-#### 2.2 — Pas de HTTPS enforcement
-Aucun middleware ou header ne force HTTPS en production (`Strict-Transport-Security` absent).
-
-#### 2.3 — Email non validé côté serveur
-L'inscription/admin et la création de vote ne valident pas le format email côté serveur.
-
-#### 2.4 — `NEXTAUTH_URL` en HTTP dans `.env.local`
-```
-NEXTAUTH_URL=http://localhost:3000
-```
-En production, doit être `https://`.
-
-#### 2.5 — Pas de Content Security Policy
-Aucun header CSP configuré (via `next.config.ts` ou middleware).
-
-#### 2.6 — Pas de vérification d'unicité des votes
-Un même votant peut voter plusieurs fois pour le même candidat sans aucune vérification d'identité unique (le numéro de téléphone n'est pas vérifié, il peut être falsifié).
-
-#### 2.7 — Suppression candidate sans cascade check
-**Fichier** : `src/app/api/admin/candidats/[id]/route.ts:67-80`
-La suppression d'un candidat supprime les votes associés (`onDelete: "cascade"` dans le schéma), mais ne supprime PAS la photo Cloudinary associée (fuite de stockage).
+| Point | Statut | Fichier | Correction |
+|-------|--------|---------|------------|
+| Logs d'erreurs | ✅ | `src/lib/log-error.ts` | Utilitaire sanitise les erreurs (message uniquement, pas de stack trace) — 7 API routes mises à jour |
+| HTTPS | ✅ | `src/middleware.ts`, `next.config.ts` | Redirect HTTP→HTTPS en prod + headers `Strict-Transport-Security`, `X-Content-Type-Options`, `X-Frame-Options` |
+| Email serveur | ✅ | `src/app/api/candidat/profil/route.ts` | Validation regex email ajoutée |
+| CSP | ✅ | `next.config.ts` | `Content-Security-Policy` + headers de sécurité ajoutés |
+| Unicité votes | ✅ | `src/app/api/votes/route.ts` | Vérification `(telephone, candidatId)` avant insertion — 409 si doublon |
+| Suppression candidat | ✅ | `src/app/api/admin/candidats/[id]/route.ts` | `deleteFromCloudinary` appelée avant suppression DB |
 
 ---
 
@@ -335,18 +321,20 @@ Sur la page candidat (`candidat/[slug]/page.tsx`), la photo peut être `null`. L
 | `.env.local` | 28 | Config secrets | 🟠 Local uniquement, non dans git — ROTATER les clés |
 | `src/db/schema.ts` | 110 | Schéma DB | 🟡 Types manquants |
 | `src/lib/db-queries.ts` | 226 | Requêtes DB | 🔴 Return type incohérent |
-| `src/app/api/votes/route.ts` | 182 | API votes | 🟡 80 lignes commentées |
+| `src/app/api/votes/route.ts` | 197 | API votes | 🟡 80 lignes commentées, 409 unique vérifié |
 | `src/components/public/Footer.tsx` | 140 | Footer | 🟡 5 SVG inline en dur |
 | `src/lib/swal.ts` | 101 | SweetAlert | 🟡 Patterns IA |
 | `src/lib/constants.ts` | 14 | Constantes | 🟢 OK |
-| `src/middleware.ts` | 38 | Auth middleware | 🟢 OK (rate limiting ajouté) |
-| `src/lib/auth.ts` | 102 | NextAuth config | 🟢 OK (session expiry ajouté) |
+| `src/lib/log-error.ts` | 10 | Logger sécurisé | 🟢 Sanitise les erreurs |
+| `src/middleware.ts` | ~130 | Auth middleware | 🟢 OK (rate limiting, HSTS, HTTPS) |
+| `src/lib/auth.ts` | 109 | NextAuth config | 🟢 OK (session expiry) |
+| `src/lib/cloudinary.ts` | 48 | Cloudinary | 🟢 OK (delete ajouté) |
 | `src/components/admin/CandidatForm.tsx` | 280 | Form candidat | 🟡 `form.elements` anti-pattern |
 | `src/app/admin/login/page.tsx` | 117 | Login admin | 🟡 Redirection non sécurisée |
 | `README.md` | 36 | Documentation | 🟡 Template non personnalisé |
 | `AGENTS.md` | 9 | Config AI agent | 🟡 Auto-généré, non pertinent |
-| `next.config.ts` | 22 | Next.js config | 🟢 OK |
-| `drizzle.config.ts` | 14 | DB config | 🟢 OK (dotenv configuré) |
+| `next.config.ts` | 31 | Next.js config | 🟢 OK (CSP + headers) |
+| `drizzle.config.ts` | 17 | DB config | 🟢 OK (dotenv configuré) |
 | `package.json` | 50 | Dépendances | 🟢 OK |
 
 ---

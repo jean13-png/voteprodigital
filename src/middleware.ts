@@ -52,6 +52,14 @@ export default auth(async (req) => {
   const { pathname } = req.nextUrl;
   const session = req.auth;
 
+  if (process.env.NODE_ENV === "production") {
+    const url = req.nextUrl.clone();
+    if (!req.headers.get("x-forwarded-proto")?.startsWith("https")) {
+      url.protocol = "https";
+      return NextResponse.redirect(url);
+    }
+  }
+
   const clientIP =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     req.headers.get("x-real-ip") ??
@@ -113,6 +121,22 @@ export default auth(async (req) => {
         );
       }
     }
+  }
+
+  // ─── Security headers (production) ──────────────────────────
+  if (process.env.NODE_ENV === "production") {
+    response.headers.set(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains"
+    );
+    response.headers.set(
+      "X-Content-Type-Options",
+      "nosniff"
+    );
+    response.headers.set(
+      "X-Frame-Options",
+      "DENY"
+    );
   }
 
   return response;

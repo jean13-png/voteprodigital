@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db, candidates } from "@/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { logError } from "@/lib/log-error";
 
 export async function PUT(req: NextRequest) {
   const session = await auth();
@@ -31,6 +32,10 @@ export async function PUT(req: NextRequest) {
       updatedAt: new Date(),
     };
 
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: "Format email invalide." }, { status: 400 });
+    }
+
     // Changement de mot de passe
     if (oldPassword && newPassword) {
       const isValid = await bcrypt.compare(oldPassword, existing[0].password);
@@ -56,7 +61,7 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("Profil update error:", err);
+    logError("Profil update", err);
     return NextResponse.json({ error: "Erreur serveur." }, { status: 500 });
   }
 }
