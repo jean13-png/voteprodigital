@@ -9,12 +9,11 @@
 ## Table des matières
 
 1. [Sommaire exécutif](#1-sommaire-exécutif)
-2. [Indicateurs de code généré par IA](#2-indicateurs-de-code-généré-par-ia)
-3. [Bugs & Problèmes techniques](#3-bugs--problèmes-techniques)
-4. [Fonctionnalités manquantes ou mal implémentées](#4-fonctionnalités-manquantes-ou-mal-implémentées)
-5. [Bugs production potentiels](#5-bugs-production-potentiels)
-6. [Recommandations prioritaires](#6-recommandations-prioritaires)
-7. [Annexe : Vue d'ensemble des fichiers critiques](#7-annexe-vue-densemble-des-fichiers-critiques)
+2. [Bugs & Problèmes techniques](#2-bugs--problèmes-techniques)
+3. [Fonctionnalités manquantes ou mal implémentées](#3-fonctionnalités-manquantes-ou-mal-implémentées)
+4. [Bugs production potentiels](#4-bugs-production-potentiels)
+5. [Recommandations prioritaires](#5-recommandations-prioritaires)
+6. [Annexe : Vue d'ensemble des fichiers critiques](#6-annexe-vue-densemble-des-fichiers-critiques)
 
 ---
 
@@ -33,62 +32,11 @@
 
 ---
 
-## 2. Indicateurs de code généré par IA
-
-### 🟡 SIGNIFICATIFS
-
-#### 2.1 — README.md non personnalisé
-**Fichier** : `README.md` — contenu identique au template par défaut de `create-next-app` (en-tête "This is a Next.js project bootstrapped with create-next-app"). Aucune mention de Vote ProDigital.
-
-#### 2.2 — AGENTS.md auto-généré par Next.js
-**Fichier** : `AGENTS.md` — contient exactement le bloc d'instructions injecté automatiquement par `next dev` (mentionne "next dev" et "generate-agent-files.js"). Ce n'est PAS un fichier de projet.
-
-#### 2.3 — Style de code uniforme suspect
-- Toutes les API routes suivent exactement le même pattern : `auth → parse → validate → query → return`
-- Toutes les pages admin utilisent exactement la même structure de tableau
-- Le composant `CandidatCard` et `VoteForm` utilisent le même pattern de `useState` + `handleSubmit`
-- Les noms de variables sont très génériques (`result`, `data`, `err`, `errs`)
-
-#### 2.4 — Commentaires descriptifs inutiles
-De nombreux commentaires ne font que décrire ce que le code fait (vs pourquoi) :
-```typescript
-// Mode manuel DÉSACTIVÉ — uniquement paiement FedaPay en ligne
-// MODE MANUEL DÉSACTIVÉ
-// Séparer prénom / nom
-// Convertir téléphone béninois vers format international
-```
-Ce pattern de commentaires inline est typique de la génération IA (expliciter chaque étape).
-
-#### 2.5 — Blocs de code commentés en masse
-Plusieurs fichiers contiennent des fonctions entières commentées :
-- `src/app/api/votes/route.ts` : 80 lignes de code commenté (mode manuel)
-- `src/app/(public)/voter/[slug]/page.tsx` : 20 lignes commentées (numéros Mobile Money)
-- `VoteForm.tsx` : 15 lignes de code commenté
-
-#### 2.6 — Patterns SweetAlert2 mixin
-Le fichier `swal.ts` utilise un pattern de mixin SweetAlert2 avec `customClass` détaillé. C'est un pattern très recommandé par les assistants IA pour la personnalisation de Swal.
-
-#### 2.7 — Couleurs hardcodées répétitives
-Les couleurs `#1B2A6B` (bleu) et `#F5A623` (orange) apparaissent dans **chaque composant** en dur. Pas de fichier de design tokens/tokens CSS centralisé.
-
-#### 2.8 — `CandidatForm.tsx` : pattern `form.elements.namedItem`
-L'accès aux valeurs du formulaire via `form.elements.namedItem()` (ligne 60-61) est un anti-pattern qui suggère un contournement rapide plutôt qu'une gestion réactive propre (react-hook-form est installé mais utilisé dans VoteForm, pas dans CandidatForm).
-
-### 🟢 MINEURS
-
-#### 2.9 — Import inutilisé
-`src/app/candidat/profil/page.tsx` importe `ProfilForm` mais vérifiez son utilisation.
-
-#### 2.10 — `next.config.ts` : `serverActions bodySizeLimit`
-La config expérimentale est présente mais Next.js 16 ne nécessite plus ce flag.
-
----
-
-## 3. Bugs & Problèmes techniques
+## 2. Bugs & Problèmes techniques
 
 ### 🔴 CRITIQUE
 
-#### 3.1 — `getCandidatesRanked()` retourne un Query object vs Array selon l'argument
+#### 2.1 — `getCandidatesRanked()` retourne un Query object vs Array selon l'argument
 **Fichier** : `src/lib/db-queries.ts:35-40`
 ```typescript
 if (limit) {
@@ -103,7 +51,7 @@ Quand `limit` n'est PAS passé (appels dans `candidat/[slug]/page.tsx:47`, `cand
 
 ### 🟠 HAUTE
 
-#### 3.2 — État du toggle non synchronisé
+#### 2.2 — État du toggle non synchronisé
 **Fichier** : `src/app/admin/candidats/ToggleActifButton.tsx:11-17`
 ```typescript
 async function toggle() {
@@ -116,7 +64,7 @@ async function toggle() {
 ```
 Si le PATCH échoue (401, réseau), l'UI se met quand même à jour avec l'état inversé.
 
-#### 3.3 — AdminSidebar : `usePathname` inexact pour les sous-pages
+#### 2.3 — AdminSidebar : `usePathname` inexact pour les sous-pages
 **Fichier** : `src/components/admin/AdminSidebar.tsx:73-74`
 ```typescript
 const active = pathname === item.href ||
@@ -124,7 +72,7 @@ const active = pathname === item.href ||
 ```
 Pour `/admin/candidats/nouveau`, le sidebar marque "Candidats" comme actif (correct), mais `/admin/candidats/[id]` ne correspond pas exactement et nécessite le `startsWith` — ça fonctionne, mais c'est fragile.
 
-#### 3.4 — AdminLogin : `signIn` avec `redirect: false` + navigation manuelle
+#### 2.4 — AdminLogin : `signIn` avec `redirect: false` + navigation manuelle
 **Fichier** : `src/app/admin/login/page.tsx:23-31`
 ```typescript
 const result = await signIn("admin", { email, password, redirect: false });
@@ -134,95 +82,95 @@ Si `signIn` échoue silencieusement (pas d'erreur mais pas de token), l'utilisat
 
 ### 🟡 MOYENNE
 
-#### 3.5 — `CandidatForm.tsx` : mauvaise gestion du mode "edit" pour mot de passe
+#### 2.5 — `CandidatForm.tsx` : mauvaise gestion du mode "edit" pour mot de passe
 En mode edit, si le champ mot de passe est laissé vide (correctement géré), le `password` n'est pas inclus dans le `FormData`, mais le `updateData` dans l'API PUT ne vérifie pas si le mot de passe a changé vs inchangé.
 
-#### 3.6 — `VoteForm.tsx` : `nombreVotes` initial = 1 avec état `number | ""`
+#### 2.6 — `VoteForm.tsx` : `nombreVotes` initial = 1 avec état `number | ""`
 L'état `nombreVotes` commence à `1` (number) mais peut devenir `""` (string). Cette union type mal gérée peut causer des problèmes TypeScript en production.
 
-#### 3.7 — `VoterPage` : mode manuel désactivé mais UI toujours présente
+#### 2.7 — `VoterPage` : mode manuel désactivé mais UI toujours présente
 La section "Numéros de paiement" (Mobile Money) est commentée dans `VotePage` (lignes 86-106). L'UI ne montre plus ces numéros, mais le texte de la page dit "Effectuez votre paiement Mobile Money". Confusion UX.
 
-#### 3.8 — `/vote/success` : pas de paramètre `voteId` affiché
+#### 2.8 — `/vote/success` : pas de paramètre `voteId` affiché
 La page success reçoit `voteId` en `searchParams` mais ne l'affiche pas. L'utilisateur n'a aucune confirmation de référence.
 
-#### 3.9 — `src/app/api/candidat/profil/route.ts` : PUT public
+#### 2.9 — `src/app/api/candidat/profil/route.ts` : PUT public
 L'endpoint PUT `/api/candidat/profil` n'existe pas dans la page candidat — il n'est lié à aucun formulaire visible. Est-ce un endpoint orphelin ou y a-t-il un formulaire manquant ?
 
 ### 🟢 BASSE
 
-#### 3.10 — `CandidatCard.tsx` : `progress` calcule avec `totalVotes` incluant "en_attente"
+#### 2.10 — `CandidatCard.tsx` : `progress` calcule avec `totalVotes` incluant "en_attente"
 Le `getCandidatesRanked` filtre par `statut = 'valide'` dans le SQL, donc OK. Mais le `getCandidateBySlug` inclut aussi les votes en attente dans `totalVotes` — ce qui gonfle les compteurs sur la page candidat individuelle.
 
-#### 3.11 — `domainesEnum` et `voteStatutEnum` pas exportés du schéma
+#### 2.11 — `domainesEnum` et `voteStatutEnum` pas exportés du schéma
 Les types sont définis mais pas facilement réutilisables ailleurs.
 
 ---
 
-## 4. Fonctionnalités manquantes ou mal implémentées
+## 3. Fonctionnalités manquantes ou mal implémentées
 
 ### 🟠 HAUTE
 
 | # | Fonctionnalité | Impact |
 |---|---------------|--------|
-| 4.1 | **Dashboard candidat vide** | Les candidats connectés n'ont aucune interface fonctionnelle |
-| 4.2 | **Page d'inscription candidat** | Les candidats doivent être créés par un admin uniquement |
-| 4.3 | **Mot de passe oublié** | Aucun mécanisme de récupération de compte |
-| 4.4 | **Monitoring temps réel des votes** | Pas de WebSocket/polling — le classement est statique (revalidate=60s) |
+| 3.1 | **Dashboard candidat vide** | Les candidats connectés n'ont aucune interface fonctionnelle |
+| 3.2 | **Page d'inscription candidat** | Les candidats doivent être créés par un admin uniquement |
+| 3.3 | **Mot de passe oublié** | Aucun mécanisme de récupération de compte |
+| 3.4 | **Monitoring temps réel des votes** | Pas de WebSocket/polling — le classement est statique (revalidate=60s) |
 
 ### 🟡 MOYENNE
 
 | # | Fonctionnalité | Impact |
 |---|---------------|--------|
-| 4.5 | **Export CSV/PDF admin** | Impossible d'exporter les données de votes |
-| 4.6 | **Log d'audit admin** | Aucune traçabilité des actions admin (validation/refus) |
-| 4.7 | **Notification email candidate** | Les candidats ne reçoivent aucune notification (seul l'admin est notifié) |
-| 4.8 | **Pagination candidates publiques** | La page `/candidats` affiche tous les candidats sans pagination |
-| 4.9 | **Sitemap / robots.txt** | Absents — mauvais pour le SEO |
-| 4.10 | **Page 401 personnalisée** | En cas de session expirée, pas de redirection vers login |
-| 4.11 | **Chargement squelette** | Aucun skeleton/loader sur les pages data-heavy |
-| 4.12 | **Accessibilité WCAG** | Pas de vérification ARIA, contraste non testé, focus non géré |
-| 4.13 | **Mode sombre** | Non disponible |
-| 4.14 | **Gestion des images candidates (suppression Cloudinary)** | La suppression d'un candidat ne nettoie pas Cloudinary |
+| 3.5 | **Export CSV/PDF admin** | Impossible d'exporter les données de votes |
+| 3.6 | **Log d'audit admin** | Aucune traçabilité des actions admin (validation/refus) |
+| 3.7 | **Notification email candidate** | Les candidats ne reçoivent aucune notification (seul l'admin est notifié) |
+| 3.8 | **Pagination candidates publiques** | La page `/candidats` affiche tous les candidats sans pagination |
+| 3.9 | **Sitemap / robots.txt** | Absents — mauvais pour le SEO |
+| 3.10 | **Page 401 personnalisée** | En cas de session expirée, pas de redirection vers login |
+| 3.11 | **Chargement squelette** | Aucun skeleton/loader sur les pages data-heavy |
+| 3.12 | **Accessibilité WCAG** | Pas de vérification ARIA, contraste non testé, focus non géré |
+| 3.13 | **Mode sombre** | Non disponible |
+| 3.14 | **Gestion des images candidates (suppression Cloudinary)** | La suppression d'un candidat ne nettoie pas Cloudinary |
 
 ### 🟢 BASSE
 
 | # | Fonctionnalité | Impact |
 |---|---------------|--------|
-| 4.15 | **Partage Twitter/X** | Seuls WhatsApp et copie de lien sont disponibles |
-| 4.16 | **Statistiques détaillées** | Pas de graphiques dans l'admin (Chart.js/recharts absents) |
-| 4.17 | **Backup automatique DB** | Aucun script de sauvegarde |
-| 4.18 | **Health check endpoint** | Pas de `/api/health` pour le monitoring |
+| 3.15 | **Partage Twitter/X** | Seuls WhatsApp et copie de lien sont disponibles |
+| 3.16 | **Statistiques détaillées** | Pas de graphiques dans l'admin (Chart.js/recharts absents) |
+| 3.17 | **Backup automatique DB** | Aucun script de sauvegarde |
+| 3.18 | **Health check endpoint** | Pas de `/api/health` pour le monitoring |
 
 ---
 
-## 5. Bugs production potentiels
+## 4. Bugs production potentiels
 
 ### 🟠 HAUTE
 
-#### 5.1 — `drizzle.config.ts` crash en production
+#### 4.1 — `drizzle.config.ts` crash en production
 Le script `drizzle-kit push` / `drizzle-kit generate` lit `.env.local` qui peut être absent en production.
 
-#### 5.2 — `FedaPay` : timeout non géré
+#### 4.2 — `FedaPay` : timeout non géré
 Si FedaPay est lent, l'API votes ne retourne jamais de réponse (pas de timeout). L'utilisateur reste bloqué avec un loading infini.
 
-#### 5.3 — `NEXTAUTH_URL` en localhost
+#### 4.3 — `NEXTAUTH_URL` en localhost
 En production avec Vercel, `NEXTAUTH_URL=http://localhost:3000` causera des erreurs de callback URL.
 
 ### 🟡 MOYENNE
 
-#### 5.4 — `Countdown.tsx` : timezone locale vs serveur
+#### 4.4 — `Countdown.tsx` : timezone locale vs serveur
 Le countdown utilise `Date.now()` côté client. Si un votant en France et un en Benin consultent la page, les deux voient le même countdown basé sur leur heure locale — pas UTC.
 
-#### 5.5 — `Image` component : fallback absent
+#### 4.5 — `Image` component : fallback absent
 Sur la page candidat (`candidat/[slug]/page.tsx`), la photo peut être `null`. Le fallback affiche la première lettre, mais les composants `Image` de Next.js avec `fill` et pas de `src` valide génèrent des warnings.
 
-#### 5.6 — `AdminLogin` : SweetAlert2 sur Server Component
+#### 4.6 — `AdminLogin` : SweetAlert2 sur Server Component
 `swalError` (de `@/lib/swal`) est appelé dans un Server Component contexte potentiel via `signIn`. SweetAlert2 est un library client-only et pourrait crasher lors du SSR.
 
 ---
 
-## 6. Recommandations prioritaires
+## 5. Recommandations prioritaires
 
 ### 🔴 IMMÉDIAT (avant tout déploiement)
 
@@ -250,7 +198,7 @@ Sur la page candidat (`candidat/[slug]/page.tsx`), la photo peut être `null`. L
 
 ---
 
-## 7. Annexe : Vue d'ensemble des fichiers critiques
+## 6. Annexe : Vue d'ensemble des fichiers critiques
 
 | Fichier | Lignes | Rôle | Problèmes |
 |---------|--------|------|-----------|
