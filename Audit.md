@@ -55,29 +55,13 @@ Aucun rate limiting sur :
 
 **Remède** : Implémenter `@upstash/ratelimit` ou middleware de rate limiting.
 
-#### 2.2.2 — Validation des entrées insuffisante
-- **VoteForm** : le téléphone est validé côté client (`/^0[1-9][0-9]{8}$/`) mais le serveur (`/api/votes`) ne valide PAS le format du téléphone
-- **API votes** : `nomVotant` peut être vide après `.trim()` (espaces uniquement passent le check de présence)
-- **API candidats** : pas de validation du format email, du slug (peut contenir des caractères spéciaux)
+#### 2.2.2 — Validation des entrées insuffisante ✅
+Ajoutées dans les route handlers :
+- **API votes** : format téléphone (`/^0[1-9][0-9]{8}$/`) + `nomVotant` non vide après trim
+- **API candidats** : format email (regex), slug (`/^[a-z0-9]+(?:-[a-z0-9]+)*$/`)
 
-#### 2.2.3 — Webhook FedaPay : vérification de signature basique
-**Fichier** : `src/app/api/webhook/fedapay/route.ts:13`
-```typescript
-import crypto from "crypto";
-// ...
-if (webhookSecret && signature) {
-  const isValid = crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(webhookSecret)
-  );
-  if (!isValid) {
-    return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
-  }
-}
-```
-La comparaison est directe (`!==`) — vulnérable aux **timing attacks** (un attaquant peut deviner le caractère par caractère en mesurant le temps de réponse). Ne protège PAS contre la forgation si le secret est connu.
-
-**Remède** : Utiliser `crypto.timingSafeEqual`.
+#### 2.2.3 — Webhook FedaPay : vérification de signature ✅
+Fichier : `src/app/api/webhook/fedapay/route.ts` — utilise `crypto.timingSafeEqual` pour la comparaison de signature.
 
 #### 2.2.4 — Secrets dans drizzle.config.ts
 **Fichier** : `drizzle.config.ts:6-16`
@@ -384,7 +368,7 @@ Le fichier a été supprimé du disque. Vérifiez l'historique git pour s'assure
 
 ### 🟠 CETTE SEMAINE
 
-6. **Ajouter validation serveur** — format email, téléphone, nom, slug (regex, par route) — ✅ partiellement fait (votes + candidats)
+6. **Ajouter validation serveur** — format email, téléphone, nom, slug (regex) — ✅ fait
 7. Créer la page `/candidat/dashboard/page.tsx` (ou rediriger vers une page existante)
 8. Ajouter une page d'inscription candidat (self-service)
 9. Ajouter un flow "mot de passe oublié"
