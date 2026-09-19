@@ -1,5 +1,3 @@
-import crypto from "crypto";
-
 interface ResetTokenEntry {
   email: string;
   expiry: number;
@@ -8,7 +6,11 @@ interface ResetTokenEntry {
 const store = new Map<string, ResetTokenEntry>();
 
 export function createResetToken(email: string): string {
-  const token = crypto.randomBytes(32).toString("hex");
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  const token = Array.from(array)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
   store.set(token, { email, expiry: Date.now() + 3600000 });
   return token;
 }

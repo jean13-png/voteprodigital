@@ -1,8 +1,16 @@
-import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { db, votes } from "@/db";
 import { eq } from "drizzle-orm";
 import { logError } from "@/lib/log-error";
+
+function constantTimeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,10 +21,7 @@ export async function POST(req: NextRequest) {
     const signature = req.headers.get("x-fedapay-signature");
 
     if (webhookSecret && signature) {
-      const isValid = crypto.timingSafeEqual(
-        Buffer.from(signature),
-        Buffer.from(webhookSecret)
-      );
+      const isValid = constantTimeEqual(signature, webhookSecret);
       if (!isValid) {
         return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
       }
