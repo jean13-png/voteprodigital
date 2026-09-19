@@ -47,13 +47,12 @@ Cookie session NextAuth : `HttpOnly`, `SameSite=Lax`, `Secure` en production. Co
 
 ### 🟠 HAUTE
 
-#### 2.2.1 — Pas de rate limiting
-Aucun rate limiting sur :
-- `/api/votes` (POST) — permet le flood de votes
-- `/api/auth/[...nextauth]` — permet brute-force sur les mots de passe
-- `/api/admin/...` — permet des appels répétés non limités
-
-**Remède** : Implémenter `@upstash/ratelimit` ou middleware de rate limiting.
+#### 2.2.1 — Pas de rate limiting ✅
+Rate limiting implémenté dans `src/middleware.ts` (sliding window en mémoire par IP) :
+- `/api/votes` (POST) : 5 requêtes / 10 min par IP
+- `/api/auth/[...nextauth]` (POST) : 5 tentatives / 15 min par IP
+- `/api/admin/...` : 30 requêtes / 10 min par IP
+Reponse 429 avec `Retry-After` en cas de dépassement.
 
 #### 2.2.2 — Validation des entrées insuffisante ✅
 Ajoutées dans les route handlers :
@@ -363,7 +362,7 @@ Le fichier a été supprimé du disque. Vérifiez l'historique git pour s'assure
 1. **Rotater TOUTES les clés locales** : DATABASE_URL, Cloudinary, FedaPay (`sk_live`), AUTH_SECRET, Resend — le fichier `.env.local` existe en clair sur le disque
 2. ~~**Supprimer `hexstrike.log`**~~ du disque local (déjà supprimé et gitignore)
 3. **Vérifier `getCandidatesRanked()`** — retourne un Query object ou Array selon l'argument (incohérence)
-4. **Ajouter rate limiting** sur les endpoints auth et votes
+4. ~~**Ajouter rate limiting** sur les endpoints auth et votes~~ ✅
 5. **Sécuriser la machine** — `.env.local` est en clair sur le disque : utiliser un gestionnaire de secrets, chiffrer les backups
 
 ### 🟠 CETTE SEMAINE
