@@ -1,33 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, votes } from "@/db";
 import { eq } from "drizzle-orm";
+import { WebhookSignature } from "fedapay";
 import { logError } from "@/lib/log-error";
 
-function constantTimeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  let result = 0;
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return result === 0;
-}
+export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const payload = await req.text();
 
-    // Vérification HMAC timing-safe
     const webhookSecret = process.env.FEDAPAY_WEBHOOK_SECRET;
     const signature = req.headers.get("x-fedapay-signature");
 
     if (webhookSecret && signature) {
-      const isValid = constantTimeEqual(signature, webhookSecret);
-      if (!isValid) {
+      try {
+        WebhookSignature.verifyHeader(payload, signature, webhookSecret);
+      } catch {
         return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
       }
+    } else {
+      return NextResponse.json({ error: "Configuration webhook incomplète" }, { status: 500 });
     }
 
-    const { entity, event } = body;
+    const { entity, event } = JSON.parse(payload);
 
     if (!entity || !event) {
       return NextResponse.json({ received: true });
