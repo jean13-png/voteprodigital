@@ -1,10 +1,12 @@
-import crypto from "crypto";
-
 export const CSRF_COOKIE = "x-csrf-token";
 export const CSRF_HEADER = "X-CSRF-Token";
 
 export function generateCsrfToken(): string {
-  return crypto.randomBytes(32).toString("hex");
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 export function verifyCsrf(
@@ -12,11 +14,12 @@ export function verifyCsrf(
   cookieValue: string | null | undefined
 ): boolean {
   if (!token || !cookieValue) return false;
-  try {
-    return crypto.timingSafeEqual(Buffer.from(token), Buffer.from(cookieValue));
-  } catch {
-    return false;
+  if (token.length !== cookieValue.length) return false;
+  let result = 0;
+  for (let i = 0; i < token.length; i++) {
+    result |= token.charCodeAt(i) ^ cookieValue.charCodeAt(i);
   }
+  return result === 0;
 }
 
 export function getCsrfFromCookie(): string | null {

@@ -98,12 +98,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
-        session.user.slug = token.slug as string | undefined;
-      }
-      session.csrfToken = token.csrfToken as string | undefined;
-      return session;
+      session.user.id = token.id as string;
+      session.user.role = token.role as string;
+      session.user.slug = token.slug as string | undefined;
+    }
+    // @ts-ignore — csrfToken stocké dans le JWT, pas dans le type Session par défaut
+    session.csrfToken = token.csrfToken;
+    return session;
     },
   },
 });
