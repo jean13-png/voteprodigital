@@ -34,14 +34,8 @@
 
 ## 2. Sécurité
 
-#### 2.1.1 — Protection CSRF implémentée
-Double-submit cookie pattern : cookie `x-csrf-token` (SameSite=Strict, non-HttpOnly) + header `X-CSRF-Token` vérifié par le middleware sur toutes les mutations (POST/PUT/PATCH/DELETE). Routes `/api/auth/*` et `/api/webhook/*` exclues. 6 composants client mis à jour avec `csrfFetch`. Fichiers : `src/lib/csrf.ts`, `src/middleware.ts`.
-
-#### 2.1.2 — Logs d'audit de sécurité nettoyés
-`hexstrike.log` (394+ lignes de logs d'outils de pénétration : sqlmap, nmap, hydra) supprimé du disque local et ajouté à `.gitignore`.
-
 #### 2.1.3 — Cookies de sécurité configurés
-Cookie session NextAuth : `HttpOnly`, `SameSite=Strict`, `Secure` en production. Cookie CSRF : `SameSite=Strict`, non-HttpOnly (lecture JS nécessaire).
+Cookie session NextAuth : `HttpOnly`, `SameSite=Lax`, `Secure` en production. Cookie CSRF (`x-csrf-token`) : `SameSite=Strict`, non-HttpOnly (lecture JS nécessaire, défini dans le middleware).
 
 ---
 
