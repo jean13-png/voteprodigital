@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Link2, Lock, Mail, User, Phone, Loader2 } from "lucide-react";
+import { Link2, Lock, Mail, User, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { swalError, swalSuccess } from "@/lib/swal";
 
@@ -21,12 +21,11 @@ export default function CandidatRegisterPage() {
     const nom = (form.elements.namedItem("nom") as HTMLInputElement).value;
     const email = (form.elements.namedItem("email") as HTMLInputElement).value;
     const password = (form.elements.namedItem("password") as HTMLInputElement).value;
-    const telephone = (form.elements.namedItem("telephone") as HTMLInputElement).value;
 
     const res = await fetch("/api/auth/candidate/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nom, email, password, telephone }),
+      body: JSON.stringify({ nom, email, password }),
     });
     const data = await res.json();
 
@@ -98,23 +97,6 @@ export default function CandidatRegisterPage() {
                   required
                   autoComplete="email"
                   placeholder="votre@email.com"
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#F5A623]/20 focus:border-[#F5A623] transition-colors"
-                />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="telephone" className="block text-sm font-medium text-gray-700 mb-1.5">
-                Téléphone
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  id="telephone"
-                  name="telephone"
-                  type="tel"
-                  required
-                  autoComplete="tel"
-                  placeholder="0612345678"
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#F5A623]/20 focus:border-[#F5A623] transition-colors"
                 />
               </div>

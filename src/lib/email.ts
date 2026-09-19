@@ -87,21 +87,7 @@ export async function sendNewVoteNotification(vote: {
   }
 }
 
-export async function sendPasswordResetEmail(email: string, token: string) {
-  if (!process.env.RESEND_API_KEY) return;
-  try {
-    const resend = getResend()!;
-    const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-    await resend.emails.send({
-      from: FROM,
-      to: email,
-      subject: "Réinitialisation de mot de passe — ProDigital Center",
-      html: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;"><div style="background: #1B2A6B; padding: 24px; border-radius: 12px 12px 0 0;"><h1 style="color: white; margin: 0; font-size: 20px;">Réinitialisation de mot de passe</h1></div><div style="background: white; padding: 24px; border: 1px solid #e5e7eb; border-top: none;"><p style="font-size: 14px; color: #374151;">Bonjour,<br/>Cliquez sur le lien pour réinitialiser votre mot de passe :</p><div style="margin-top: 20px;"><a href="${baseUrl}/candidat/mot-de-passe-oublie?token=${token}" style="display: inline-block; background: #F5A623; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">Réinitialiser mon mot de passe</a></div><p style="font-size: 12px; color: #9ca3af; margin-top: 20px;">Ce lien expire dans 1 heure.</p></div><div style="background: #f9fafb; padding: 16px; border-radius: 0 0 12px 12px; border: 1px solid #e5e7eb; border-top: none; text-align: center;"><p style="color: #9ca3af; font-size: 12px; margin: 0;">ProDigital Center &copy; ${new Date().getFullYear()}</p></div></div></div>`,
-    });
-  } catch (err) {
-    logError("Password reset email", err);
-  }
-}
+// ─── Email admin : vote validé ────────────────────────────────────────────────
 
 export async function sendVoteValidatedNotification(vote: {
   nomVotant: string;

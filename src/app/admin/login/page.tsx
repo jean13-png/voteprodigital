@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Lock, Mail, Eye, EyeOff, Loader2 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { swalError } from "@/lib/swal";
 
 export default function AdminLoginPage() {

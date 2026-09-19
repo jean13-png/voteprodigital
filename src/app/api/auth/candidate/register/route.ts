@@ -15,9 +15,9 @@ function toSlug(text: string): string {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { nom, email, password, telephone } = body;
+    const { nom, email, password } = body;
 
-    if (!nom || !email || !password || !telephone) {
+    if (!nom || !email || !password) {
       return NextResponse.json(
         { error: "Tous les champs sont requis." },
         { status: 400 }
@@ -34,13 +34,6 @@ export async function POST(req: NextRequest) {
     if (password.length < 8) {
       return NextResponse.json(
         { error: "Mot de passe trop court (min 8 caractères)." },
-        { status: 400 }
-      );
-    }
-
-    if (!/^0[1-9][0-9]{8}$/.test(telephone.trim())) {
-      return NextResponse.json(
-        { error: "Format de téléphone invalide." },
         { status: 400 }
       );
     }
@@ -78,7 +71,6 @@ export async function POST(req: NextRequest) {
         email: email.trim().toLowerCase(),
         slug,
         password: hashedPassword,
-        telephone: telephone.trim(),
         domaine: "bureautique",
         actif: true,
       })
