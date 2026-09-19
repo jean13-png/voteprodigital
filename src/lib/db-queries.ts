@@ -42,10 +42,9 @@ export async function getCandidatesRanked(limit?: number) {
     );
 
   if (limit) {
-    const result = await query.limit(limit);
-    return result;
+    return await query.limit(limit);
   }
-  return query;
+  return await query;
 }
 
 // ─── Un candidat par slug ─────────────────────────────────────────────────────
