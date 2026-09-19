@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db, candidates } from "@/db";
 import { eq } from "drizzle-orm";
+import { auditLog } from "@/lib/audit-log";
 
 export async function PATCH(
   _req: NextRequest,
@@ -28,6 +29,14 @@ export async function PATCH(
     .update(candidates)
     .set({ actif: !existing[0].actif, updatedAt: new Date() })
     .where(eq(candidates.id, candidatId));
+
+  await auditLog({
+    adminId: parseInt(session.user.id),
+    action: "toggle_candidate",
+    targetType: "candidate",
+    targetId: candidatId,
+    details: `actif=${!existing[0].actif}`,
+  });
 
   return NextResponse.json({ success: true, actif: !existing[0].actif });
 }

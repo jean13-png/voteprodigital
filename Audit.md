@@ -23,12 +23,12 @@
 |-----------|---------|--------|
 | 🔴 Critique | Critical | 1 |
 | 🟠 Haute | High | 9 |
-| 🟡 Moyenne | Medium | 26 |
+| 🟡 Moyenne | Medium | 25 |
 | 🟢 Basse | Low | 6 |
 
 **Verdict global** : Plateforme fonctionnelle avec une bonne base architecturale, mais présentant des failles de sécurité critiques et un état de production non prêt.
 
-> **Corrections appliquées** : Sécurité (logs, HTTPS, CSP, unicité, cascade, email, log sanitization), Loading states admin, SVGs Footer/ShareButton externalisés, Countdown flash corrigé, message success corrigé, messages hardcodés externalisés, validation URL preuve, inscription candidat, mot de passe oublié, Cloudinary cleanup.
+> **Corrections appliquées** : Sécurité (logs, HTTPS, CSP, unicité, cascade, email, log sanitization), Loading states admin, SVGs Footer/ShareButton externalisés, Countdown flash corrigé, message success corrigé, messages hardcodés externalisés, validation URL preuve, inscription candidat, mot de passe oublié, Cloudinary cleanup, log d'audit admin.
 
 ---
 
@@ -123,7 +123,6 @@ Les types sont définis mais pas facilement réutilisables ailleurs.
 | # | Fonctionnalité | Impact |
 |---|---------------|--------|
 | 3.5 | **Export CSV/PDF admin** | Impossible d'exporter les données de votes |
-| 3.6 | **Log d'audit admin** | Aucune traçabilité des actions admin (validation/refus) |
 | 3.7 | **Notification email candidate** | Les candidats ne reçoivent aucune notification (seul l'admin est notifié) |
 | 3.8 | **Pagination candidates publiques** | La page `/candidats` affiche tous les candidats sans pagination |
 | 3.9 | **Sitemap / robots.txt** | Absents — mauvais pour le SEO |
@@ -191,10 +190,9 @@ Sur la page candidat (`candidat/[slug]/page.tsx`), la photo peut être `null`. L
 9. Centraliser les tokens de couleurs (Tailwind config / CSS variables)
 10. Supprimer les blocs de code commentés ou les archiver
 11. Ajouter loading states / skeletons
-12. Ajouter log d'audit admin
-13. Créer sitemap.xml et robots.txt
-14. Ajouter pagination sur la liste des candidats publics
-15. Mettre à jour le README.md avec la documentation du projet
+12. Créer sitemap.xml et robots.txt
+13. Ajouter pagination sur la liste des candidats publics
+14. Mettre à jour le README.md avec la documentation du projet
 
 ---
 
@@ -203,9 +201,10 @@ Sur la page candidat (`candidat/[slug]/page.tsx`), la photo peut être `null`. L
 | Fichier | Lignes | Rôle | Problèmes |
 |---------|--------|------|-----------|
 | `.env.local` | 28 | Config secrets | 🟠 Local uniquement, non dans git — ROTATER les clés |
-| `src/db/schema.ts` | 110 | Schéma DB | 🟡 Types manquants |
+| `src/db/schema.ts` | 131 | Schéma DB | 🟡 Types manquants, audit_logs ajouté |
 | `src/lib/db-queries.ts` | 235 | Requêtes DB | 🔴 Return type incohérent (getCandidatesRanked) |
 | `src/app/api/votes/route.ts` | 197 | API votes | 🟡 80 lignes commentées, 409 unique vérifié |
+| `src/lib/audit-log.ts` | 15 | Audit log | 🟢 Nouveau — traçabilité admin |
 | `src/lib/swal.ts` | 101 | SweetAlert | 🟡 Patterns IA |
 | `src/components/admin/CandidatForm.tsx` | 280 | Form candidat | 🟡 `form.elements` anti-pattern |
 | `src/app/admin/login/page.tsx` | 117 | Login admin | 🟡 Redirection non sécurisée |

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db, votes, candidates } from "@/db";
 import { eq } from "drizzle-orm";
 import { sendVoteValidatedNotification } from "@/lib/email";
+import { auditLog } from "@/lib/audit-log";
 
 export async function PATCH(
   _req: NextRequest,
@@ -25,6 +26,13 @@ export async function PATCH(
     .update(votes)
     .set({ statut: "valide", commentaireAdmin: "Validé par l'administrateur" })
     .where(eq(votes.id, voteId));
+
+  await auditLog({
+    adminId: parseInt(session.user.id),
+    action: "validate_vote",
+    targetType: "vote",
+    targetId: voteId,
+  });
 
   // Notification email
   const candidatRes = await db

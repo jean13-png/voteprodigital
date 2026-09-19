@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { uploadToCloudinary, isCloudinaryConfigured, deleteFromCloudinary } from "@/lib/cloudinary";
 import { logError } from "@/lib/log-error";
+import { auditLog } from "@/lib/audit-log";
 
 export async function PUT(
   req: NextRequest,
@@ -88,6 +89,14 @@ export async function DELETE(
   }
 
   await db.delete(candidates).where(eq(candidates.id, candidatId));
+
+  await auditLog({
+    adminId: parseInt(session.user.id),
+    action: "delete_candidate",
+    targetType: "candidate",
+    targetId: candidatId,
+    details: `nom=${candidat?.nom}`,
+  });
 
   return NextResponse.json({ success: true });
 }

@@ -90,6 +90,27 @@ export const votesRelations = relations(votes, ({ one }) => ({
   }),
 }));
 
+// ─── Table : audit_logs ────────────────────────────────────────────────
+
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  adminId: integer("admin_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  action: varchar("action", { length: 100 }).notNull(),
+  targetType: varchar("target_type", { length: 50 }).notNull(),
+  targetId: integer("target_id"),
+  details: text("details"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  admin: one(users, {
+    fields: [auditLogs.adminId],
+    references: [users.id],
+  }),
+}));
+
 // ─── Types inférés ────────────────────────────────────────────────────────────
 
 export type User = typeof users.$inferSelect;

@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { uploadToCloudinary, isCloudinaryConfigured } from "@/lib/cloudinary";
 import { logError } from "@/lib/log-error";
+import { auditLog } from "@/lib/audit-log";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -91,6 +92,14 @@ export async function POST(req: NextRequest) {
         actif: true,
       })
       .returning();
+
+    await auditLog({
+      adminId: parseInt(session.user.id),
+      action: "create_candidate",
+      targetType: "candidate",
+      targetId: result[0].id,
+      details: `nom=${nom}, domaine=${domaine}`,
+    });
 
     return NextResponse.json({ success: true, id: result[0].id }, { status: 201 });
   } catch (err) {
