@@ -62,23 +62,18 @@ Ajoutées dans les route handlers :
 #### 2.2.3 — Webhook FedaPay : vérification de signature ✅
 Fichier : `src/app/api/webhook/fedapay/route.ts` — utilise `crypto.timingSafeEqual` pour la comparaison de signature.
 
-#### 2.2.4 — Secrets dans drizzle.config.ts
-**Fichier** : `drizzle.config.ts:6-16`
-Le fichier `.env.local` est lu manuellement et parsé pour alimenter les variables d'environnement de drizzle-kit. C'est un anti-pattern qui expose le chemin du fichier et sa logique.
+#### 2.2.4 — Secrets dans drizzle.config.ts ✅
+**Fichier** : `drizzle.config.ts`
+Le parser manuel de `.env.local` (readFileSync + regex) a été remplacé par `dotenv/config` avec `override: true`. Plus d'anti-pattern, plus de try/catch silencieux.
 
-#### 2.2.5 — Pas de politique de session
-```typescript
-// src/lib/auth.ts:9
-session: { strategy: "jwt" },
-```
-Aucune configuration de `maxAge`, `updateAge`, ou `secure` sur les sessions JWT. Les sessions ne expirent jamais par défaut.
+#### 2.2.5 — Pas de politique de session ✅
+Ajouté dans `src/lib/auth.ts`:
+- `maxAge: 30 * 24 * 60 * 60` (30 jours)
+- `updateAge: 24 * 60 * 60` (rafraîchissement après 24h)
 
-#### 2.2.6 — Password seed faible
-**Fichier** : `.env.local:28`
-```
-ADMIN_PASSWORD_SEED=TOSjea13#
-```
-Mot de passe admin faible présent sur la machine locale.
+#### 2.2.6 — Password seed faible ✅
+- `ADMIN_PASSWORD_SEED` requis (plus de fallback faible `"Admin@2026!"`) — `src/scripts/seed-admin.ts:11`
+- Affichage du mot de passe dans le console supprimé (`src/scripts/seed-admin:25`)
 
 ---
 
