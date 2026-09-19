@@ -70,32 +70,36 @@ Le fichier `src/app/candidat/dashboard/page.tsx` existe et est pleinement foncti
 ### 🟡 MOYENNE
 
 #### 3.4 — Loading states absents
-- Admin Dashboard : pas de skeleton/loading lors du chargement des données
-- Admin Votes : idem
-- Pages publiques : pas de loading sur les appels API
+- Admin Dashboard : ✅ `src/app/admin/loading.tsx` ajouté (skeleton KPIs + table)
+- Admin Votes : ✅ `src/app/admin/votes/loading.tsx` ajouté (skeleton filtres + table)
+- VoteForm : ✅ State `loading` avec bouton désactivé + spinner (déjà implémenté)
+- CandidatsFiltre / ShareButton : ✅ Pas d'appels API (pas de loading nécessaire)
 
 #### 3.5 — Footer avec SVGs en dur codés
-Le Footer (`src/components/public/Footer.tsx`) contient **5 SVG inline complets** en dur (Facebook, Instagram, YouTube, LinkedIn, WhatsApp). Le code est de 140 lignes dont ~50 pour les SVG. Pas de composant/icon library pour ces éléments.
-
-De même, le WhatsApp share button dans `ShareButton.tsx` a un SVG inline de 40 lignes.
+✅ **Corrigé** — Création du composant `src/components/public/SocialIcon.tsx` (réutilisable, props : `label`, `href`, `svg`). Le Footer utilise désormais `<SocialIcon />` pour les 6 réseaux sociaux. Le WhatsApp SVG de `ShareButton.tsx` est extrait en constante `WHATSAPP_SVG` au-dessus du composant.
 
 #### 3.6 — Compte à rebours "flash" à l'hydratation
-Le composant `Countdown.tsx` affiche `--` pendant le SSR puis les vraies valeurs au montage. Cela crée un "flash" visible pour l'utilisateur.
+✅ **Corrigé** — `Countdown.tsx` utilise désormais `useState<TimeLeft>(() => calcTimeLeft())` (initialiseur paresseux) au lieu de `useState<TimeLeft | null>(null)`. Le client affiche immédiatement les vraies valeurs sans attendre le `useEffect`, éliminant le flash `--`.
 
 #### 3.7 — Message de vote success trompeur
-La page `/vote/success` indique : "Notre équipe va vérifier votre preuve de puis". Or le mode manuel (upload de preuve) est désactivé. Le mode actuel est FedaPay automatique — le message est obsolète.
+✅ **Corrigé** — La page `/vote/success` indique désormais : "Votre vote a bien été enregistré. Il sera automatiquement validé par notre système dans les meilleurs délais." L'étape 2 a été renommée "Validation automatique (en cours)" au lieu de "Vérification de la preuve (en cours)".
 
 #### 3.8 — Messages hardcodés
-- Footer : "18 candidats en compétition" (nombre hardcodé, le DB peut contenir un autre nombre)
-- Footer : "Soutenance le samedi 7 novembre 2026" (dupliqué avec les constantes)
-- Home page : "18 apprenants" (hardcodé)
+✅ **Corrigé** — Toutes les mentions "18" sont désormais dynamiques :
+- Footer : "{candidatCount} candidats en compétition" (requête DB `getCandidatesCount()`)
+- Footer : date formatée via `SOUTENANCE_DATE_FORMATTED` (constante issue de `SOUTENANCE_DATE`)
+- Home page hero : "{candidatCount} apprenants" + date dynamique
+- Home page bande infos : `{candidatCount}` Candidats (dynamic)
+- Home page classement : "Voir les {candidatCount}" / "Voir tous les {candidatCount} candidats"
+- Home page étapes : "Parcourez les {candidatCount} candidats"
 
 #### 3.9 — Grille d'accueil non optimisée mobile
-Les 4 étapes "Comment voter" utilisent un `grid-cols-4` avec `gap-px` sur fond gris. Sur mobile, cela crée des colonnes très étroites.
+✅ **Vérifié** — La grille "Comment voter" utilise déjà `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-gray-200`. Responsive sur mobile (1 colonne), tablette (2 colonnes), desktop (4 colonnes). Aucune correction nécessaire.
 
 #### 3.10 — Admin votes : aperçu image non sécurisé
-**Fichier** : `src/app/admin/votes/VotesTable.tsx:248`
-L'image de preuve est affichée via `<img src={previewUrl}>` (ligne 248 — eslint disable `@next/next/no-img-element`). Le URL provient de la base de données et pourrait être modifié (XSS via image SVG).
+✅ **Sécurisé** — Ajout de la fonction `isTrustedUrl()` qui valide que l'URL de preuve provient d'un domaine autorisé (`res.cloudinary.com`, `cdn.shopify.com`) avant d'afficher l'image. Si l'URL n'est pas trusted, un message "Lien de preuve non autorisé" s'affiche à la place.
+
+> **Note** : Dans le flux actuel (FedaPay automatique), le champ `preuve` n'est jamais peuplé dans la base de données (il reste toujours `null`). La modal de preuve ne s'affiche donc jamais en production. La validation ajoutée est une mesure de défense en profondeur pour le futur.
 
 ---
 
@@ -308,13 +312,14 @@ Sur la page candidat (`candidat/[slug]/page.tsx`), la photo peut être `null`. L
 
 9. Centraliser les tokens de couleurs (Tailwind config / CSS variables)
 10. Supprimer les blocs de code commentés ou les archiver
-11. Ajouter loading states / skeletons
-12. Ajouter log d'audit admin
-13. Créer sitemap.xml et robots.txt
-14. Corriger le message "proof de paiement" sur la page success
+11. ✅ Ajouter loading states / skeletons (admin : loading.tsx ajouté)
+14. ✅ Corriger le message "proof de paiement" sur la page success
 15. Ajouter pagination sur la liste des candidats publics
-16. Implémenter un cleanup Cloudinary lors de la suppression d'un candidat
+16. ✅ Implémenter un cleanup Cloudinary lors de la suppression d'un candidat
 17. Mettre à jour le README.md avec la documentation du projet
+18. ✅ Centraliser les messages hardcodés (constante SOUTENANCE_DATE_FORMATTED, compteur DB)
+19. ✅ Extraire SVGs sociaux en composant réutilisable
+20. ✅ Sécuriser l'aperçu image (validation de domaine)
 
 ---
 
@@ -326,9 +331,12 @@ Sur la page candidat (`candidat/[slug]/page.tsx`), la photo peut être `null`. L
 | `src/db/schema.ts` | 110 | Schéma DB | 🟡 Types manquants |
 | `src/lib/db-queries.ts` | 226 | Requêtes DB | 🔴 Return type incohérent |
 | `src/app/api/votes/route.ts` | 197 | API votes | 🟡 80 lignes commentées, 409 unique vérifié |
-| `src/components/public/Footer.tsx` | 140 | Footer | 🟡 5 SVG inline en dur |
+| `src/components/public/Footer.tsx` | 137 | Footer | 🟢 SVG externalisés (SocialIcon) |
+| `src/components/public/SocialIcon.tsx` | 15 | Composant SVG | 🟢 Nouveau — remplace SVG inline Footer |
+| `src/app/admin/loading.tsx` | 16 | Loading admin | 🟢 Nouveau — skeleton admin |
+| `src/app/admin/votes/loading.tsx` | 19 | Loading votes | 🟢 Nouveau — skeleton votes |
 | `src/lib/swal.ts` | 101 | SweetAlert | 🟡 Patterns IA |
-| `src/lib/constants.ts` | 14 | Constantes | 🟢 OK |
+| `src/lib/constants.ts` | 18 | Constantes | 🟢 OK (SOUTENANCE_DATE_FORMATTED ajouté) |
 | `src/lib/log-error.ts` | 10 | Logger sécurisé | 🟢 Sanitise les erreurs |
 | `src/middleware.ts` | ~130 | Auth middleware | 🟢 OK (rate limiting, HSTS, HTTPS) |
 | `src/lib/auth.ts` | 109 | NextAuth config | 🟢 OK (session expiry) |

@@ -6,6 +6,17 @@ import { Search, CheckCircle, XCircle, Loader2, Image as ImageIcon } from "lucid
 import { swalConfirm, swalToast, swalError } from "@/lib/swal";
 import { csrfFetch } from "@/lib/csrf";
 
+const ALLOWED_PREUVE_DOMAINS = ["res.cloudinary.com", "cdn.shopify.com"];
+
+function isTrustedUrl(url: string): boolean {
+  try {
+    const { hostname } = new URL(url);
+    return ALLOWED_PREUVE_DOMAINS.some((d) => hostname === d || hostname.endsWith(`.${d}`));
+  } catch {
+    return false;
+  }
+}
+
 const statutBadge: Record<string, string> = {
   en_attente: "bg-yellow-100 text-yellow-700",
   valide: "bg-green-100 text-green-700",
@@ -245,8 +256,16 @@ export default function VotesTable({ data, currentStatut, currentSearch }: Props
           onClick={() => setPreviewUrl(null)}
         >
           <div className="relative max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={previewUrl} alt="Preuve de paiement" className="w-full rounded-2xl" />
+            {isTrustedUrl(previewUrl) ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={previewUrl} alt="Preuve de paiement" className="w-full rounded-2xl" />
+              </>
+            ) : (
+              <div className="bg-white rounded-2xl p-8 text-center">
+                <p className="text-gray-500 text-sm">Lien de preuve non autorisé.</p>
+              </div>
+            )}
             <button
               onClick={() => setPreviewUrl(null)}
               className="absolute top-3 right-3 w-8 h-8 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center"

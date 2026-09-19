@@ -4,6 +4,15 @@ import { eq, desc, sql, and, ilike, or } from "drizzle-orm";
 // Ré-exporter les constantes depuis constants.ts (server-side uniquement)
 export { VOTE_PRICE, VOTE_OBJECTIF, SOUTENANCE_DATE, DOMAINES } from "@/lib/constants";
 
+// ─── Nombre de candidats ──────────────────────────────────────────────
+
+export async function getCandidatesCount(): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(candidates);
+  return Number(row?.count ?? 0);
+}
+
 // ─── Classement candidats (votes validés) ─────────────────────────────────────
 
 export async function getCandidatesRanked(limit?: number) {

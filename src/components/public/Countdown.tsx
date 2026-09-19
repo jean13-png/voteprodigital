@@ -37,7 +37,7 @@ function Bloc({ value, label }: { value: number; label: string }) {
 }
 
 export default function Countdown() {
-  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
+  const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => calcTimeLeft());
 
   useEffect(() => {
     // Premier calcul après montage (évite l'erreur d'hydration)
@@ -45,24 +45,6 @@ export default function Countdown() {
     const timer = setInterval(() => setTimeLeft(calcTimeLeft()), 1000);
     return () => clearInterval(timer);
   }, []);
-
-  // Pendant le SSR et avant le montage : afficher des blocs vides
-  if (!timeLeft) {
-    return (
-      <div className="flex items-start gap-3 sm:gap-4">
-        {["Jours", "Heures", "Minutes", "Secondes"].map((label) => (
-          <div key={label} className="flex flex-col items-center">
-            <div className="bg-[#1B2A6B] text-white rounded-xl w-16 sm:w-20 h-16 sm:h-20 flex items-center justify-center">
-              <span className="text-2xl sm:text-3xl font-extrabold tabular-nums">--</span>
-            </div>
-            <span className="mt-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              {label}
-            </span>
-          </div>
-        ))}
-      </div>
-    );
-  }
 
   const isOver =
     timeLeft.jours === 0 &&

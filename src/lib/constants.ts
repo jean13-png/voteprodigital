@@ -12,3 +12,11 @@ export const DOMAINES: Record<string, string> = {
   ecommerce: "E-Commerce",
   audiovisuel: "Audiovisuel",
 };
+
+function formatSoutenanceDate(date: Date): string {
+  const jours = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+  const mois = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+  return `${jours[date.getDay()]} ${date.getDate()} ${mois[date.getMonth()]} ${date.getFullYear()}`;
+}
+
+export const SOUTENANCE_DATE_FORMATTED = formatSoutenanceDate(SOUTENANCE_DATE);

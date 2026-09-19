@@ -22,8 +22,8 @@ export default function VoteSuccessPage({
           Vote soumis avec succès !
         </h1>
         <p className="text-gray-600 mb-4 leading-relaxed">
-          Votre vote a bien été enregistré. Notre équipe va vérifier votre
-          preuve de paiement et valider vos votes dans les meilleurs délais.
+          Votre vote a bien été enregistré. Il sera automatiquement validé
+          par notre système dans les meilleurs délais.
         </p>
 
         {/* Étapes */}
@@ -38,7 +38,7 @@ export default function VoteSuccessPage({
             {
               icon: Clock,
               color: "text-[#F5A623]",
-              label: "Vérification de la preuve (en cours)",
+              label: "Validation automatique (en cours)",
               done: false,
             },
             {

@@ -1,14 +1,16 @@
 import Link from "next/link";
 import Image from "next/image";
-import { getCandidatesRanked } from "@/lib/db-queries";
+import { getCandidatesRanked, getCandidatesCount } from "@/lib/db-queries";
 import CandidatCard from "@/components/public/CandidatCard";
 import Countdown from "@/components/public/Countdown";
+import { SOUTENANCE_DATE_FORMATTED } from "@/lib/constants";
 import { ArrowRight } from "lucide-react";
 
 export const revalidate = 60;
 
 export default async function HomePage() {
   const topCandidats = await getCandidatesRanked(8);
+  const candidatCount = await getCandidatesCount();
 
   return (
     <>
@@ -34,8 +36,8 @@ export default async function HomePage() {
                 <span className="text-[#F5A623]">candidat préféré</span>
               </h1>
               <p className="text-white/60 text-base leading-relaxed mb-8">
-                18 apprenants du Bootcamp Digital Academy présentent leurs
-                projets le <strong className="text-white/90">7 novembre 2026</strong>.
+                {candidatCount} apprenants du Bootcamp Digital Academy présentent leurs
+                projets le <strong className="text-white/90">{SOUTENANCE_DATE_FORMATTED}</strong>.
                 Soutenez celui qui mérite votre voix.
               </p>
               <div className="flex flex-wrap gap-3">
@@ -62,7 +64,7 @@ export default async function HomePage() {
                   Soutenance dans
                 </p>
                 <p className="text-white font-bold text-sm mb-5">
-                  Samedi 7 novembre 2026
+                  {SOUTENANCE_DATE_FORMATTED}
                 </p>
                 <Countdown />
               </div>
@@ -77,7 +79,7 @@ export default async function HomePage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#e09516]">
             {[
-              { value: "18", label: "Candidats" },
+              { value: String(candidatCount), label: "Candidats" },
               { value: "5", label: "Domaines" },
               { value: "50 FCFA", label: "Par vote" },
               { value: "1 000", label: "Objectif / candidat" },
@@ -110,7 +112,7 @@ export default async function HomePage() {
               href="/candidats"
               className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-[#1B2A6B] hover:text-[#F5A623] transition-colors"
             >
-              Voir les 18 <ArrowRight className="w-4 h-4" />
+              Voir les {candidatCount} <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
@@ -142,7 +144,7 @@ export default async function HomePage() {
               href="/candidats"
               className="text-sm font-semibold text-[#1B2A6B] underline underline-offset-4"
             >
-              Voir tous les 18 candidats
+              Voir tous les {candidatCount} candidats
             </Link>
           </div>
         </div>
@@ -166,7 +168,7 @@ export default async function HomePage() {
               {
                 num: "01",
                 title: "Choisissez un candidat",
-                desc: "Parcourez les 18 candidats et découvrez leurs projets numériques.",
+                desc: `Parcourez les ${candidatCount} candidats et découvrez leurs projets numériques.`,
               },
               {
                 num: "02",

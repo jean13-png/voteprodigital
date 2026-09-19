@@ -1,5 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
+import { db, candidates } from "@/db";
+import { eq, sql } from "drizzle-orm";
+import SocialIcon from "./SocialIcon";
+import { SOUTENANCE_DATE_FORMATTED } from "@/lib/constants";
 
 const socialLinks = [
   {
@@ -40,7 +44,16 @@ const quickLinks = [
   { href: "/candidat/login", label: "Espace candidat" },
 ];
 
-export default function Footer() {
+async function getCandidatesCount(): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(candidates);
+  return Number(row?.count ?? 0);
+}
+
+export default async function Footer() {
+  const candidatCount = await getCandidatesCount();
+
   return (
     <footer className="bg-[#1B2A6B] text-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
@@ -90,35 +103,19 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-white/70 mb-6">
               <li>
                 Soutenance le{" "}
-                <span className="text-white font-medium">samedi 7 novembre 2026</span>
+                <span className="text-white font-medium">{SOUTENANCE_DATE_FORMATTED}</span>
               </li>
               <li>
                 Prix du vote :{" "}
                 <span className="text-[#F5A623] font-semibold">50 FCFA</span>
               </li>
               <li>
-                18 candidats en compétition
+                {candidatCount} candidats en compétition
               </li>
             </ul>
             <div className="flex flex-wrap gap-2">
               {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={social.label}
-                  className="w-8 h-8 bg-white/10 hover:bg-[#F5A623] flex items-center justify-center transition-colors"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path d={social.svg} />
-                  </svg>
-                </a>
+                <SocialIcon key={social.label} {...social} />
               ))}
             </div>
           </div>
