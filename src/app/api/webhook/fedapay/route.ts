@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { db, votes } from "@/db";
 import { eq } from "drizzle-orm";
@@ -6,12 +7,18 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // Vérification basique de la signature (à renforcer en prod avec HMAC)
+    // Vérification HMAC timing-safe
     const webhookSecret = process.env.FEDAPAY_WEBHOOK_SECRET;
     const signature = req.headers.get("x-fedapay-signature");
 
-    if (webhookSecret && signature !== webhookSecret) {
-      return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
+    if (webhookSecret && signature) {
+      const isValid = crypto.timingSafeEqual(
+        Buffer.from(signature),
+        Buffer.from(webhookSecret)
+      );
+      if (!isValid) {
+        return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
+      }
     }
 
     const { entity, event } = body;

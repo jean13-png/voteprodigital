@@ -30,6 +30,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json(
+        { error: "Format email invalide." },
+        { status: 400 }
+      );
+    }
+
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+      return NextResponse.json(
+        { error: "Slug invalide (lettres, chiffres et tirets uniquement)." },
+        { status: 400 }
+      );
+    }
+
     // Vérifier unicité email + slug
     const existing = await db
       .select()

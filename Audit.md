@@ -34,7 +34,13 @@
 
 ## 2. Sécurité
 
-#### 2.1.3 — Cookies de sécurité configurés
+#### 2.1.1 — Protection CSRF implémentée ✅
+Double-submit cookie pattern : cookie `x-csrf-token` (SameSite=Strict, non-HttpOnly) + header `X-CSRF-Token` vérifié par le middleware sur toutes les mutations (POST/PUT/PATCH/DELETE). Routes `/api/auth/*` et `/api/webhook/*` exclues. 6 composants client mis à jour avec `csrfFetch`. Fichiers : `src/lib/csrf.ts`, `src/middleware.ts`.
+
+#### 2.1.2 — Logs d'audit de sécurité nettoyés ✅
+`hexstrike.log` (394+ lignes de logs d'outils de pénétration : sqlmap, nmap, hydra) supprimé du disque local et ajouté à `.gitignore`.
+
+#### 2.1.3 — Cookies de sécurité configurés ✅
 Cookie session NextAuth : `HttpOnly`, `SameSite=Lax`, `Secure` en production. Cookie CSRF (`x-csrf-token`) : `SameSite=Strict`, non-HttpOnly (lecture JS nécessaire, défini dans le middleware).
 
 ---
@@ -50,20 +56,28 @@ Aucun rate limiting sur :
 **Remède** : Implémenter `@upstash/ratelimit` ou middleware de rate limiting.
 
 #### 2.2.2 — Validation des entrées insuffisante
-- **VoteForm** : le téléphone est validé côté client (`/^0[1-9][0-9]{8}$/`) mais le serveur (`/api/votes`) ne valide PAS le format du téléphone ni l'email
-- **API votes** : pas de validation de `nomVotant` (peut être vide après `.trim()` si espaces uniquement), pas de validation d'email
+- **VoteForm** : le téléphone est validé côté client (`/^0[1-9][0-9]{8}$/`) mais le serveur (`/api/votes`) ne valide PAS le format du téléphone
+- **API votes** : `nomVotant` peut être vide après `.trim()` (espaces uniquement passent le check de présence)
 - **API candidats** : pas de validation du format email, du slug (peut contenir des caractères spéciaux)
 
 #### 2.2.3 — Webhook FedaPay : vérification de signature basique
 **Fichier** : `src/app/api/webhook/fedapay/route.ts:13`
 ```typescript
-if (webhookSecret && signature !== webhookSecret) {
-  return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
+import crypto from "crypto";
+// ...
+if (webhookSecret && signature) {
+  const isValid = crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(webhookSecret)
+  );
+  if (!isValid) {
+    return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
+  }
 }
 ```
-La comparaison est directe (pas de HMAC). Un attaquant qui obtient `FEDAPAY_WEBHOOK_SECRET` peut forger des webhooks.
+La comparaison est directe (`!==`) — vulnérable aux **timing attacks** (un attaquant peut deviner le caractère par caractère en mesurant le temps de réponse). Ne protège PAS contre la forgation si le secret est connu.
 
-**Remède** : Utiliser `crypto.timingSafeEqual` ou HMAC SHA256.
+**Remède** : Utiliser `crypto.timingSafeEqual`.
 
 #### 2.2.4 — Secrets dans drizzle.config.ts
 **Fichier** : `drizzle.config.ts:6-16`
@@ -370,12 +384,12 @@ Le fichier a été supprimé du disque. Vérifiez l'historique git pour s'assure
 
 ### 🟠 CETTE SEMAINE
 
-6. Ajouter validation Zod sur tous les inputs serveur (email, téléphone, nom, slug)
+6. **Ajouter validation serveur** — format email, téléphone, nom, slug (regex, par route) — ✅ partiellement fait (votes + candidats)
 7. Créer la page `/candidat/dashboard/page.tsx` (ou rediriger vers une page existante)
 8. Ajouter une page d'inscription candidat (self-service)
 9. Ajouter un flow "mot de passe oublié"
 10. Configurer HTTPS et headers de sécurité (CSP, HSTS, X-Frame-Options)
-11. Corriger la vérification HMAC du webhook FedaPay
+11. **Corriger la vérification signature webhook** — `crypto.timingSafeEqual` ✅
 12. Ajouter un timeout sur les appels FedaPay
 
 ### 🟡 CE MOIS

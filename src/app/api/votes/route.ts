@@ -33,6 +33,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (!/^0[1-9][0-9]{8}$/.test(telephone.trim())) {
+      return NextResponse.json(
+        { error: "Format de téléphone invalide." },
+        { status: 400 }
+      );
+    }
+
+    if (!nomVotant.trim()) {
+      return NextResponse.json(
+        { error: "Le nom du votant est requis." },
+        { status: 400 }
+      );
+    }
+
     const candidatRes = await db
       .select()
       .from(candidates)
