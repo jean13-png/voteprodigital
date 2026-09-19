@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { db, candidates } from "@/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { logError } from "@/lib/log-error";
 
 export async function PUT(req: NextRequest) {
-  const session = await auth();
+  const session = await getSession(req);
   if (!session || session.user?.role !== "candidate") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }

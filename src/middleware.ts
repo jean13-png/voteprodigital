@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getSession } from "@/lib/session";
 import {
   CSRF_COOKIE,
   CSRF_HEADER,
@@ -57,7 +58,7 @@ export default async function middleware(req: NextRequest) {
 
 async function handleMiddleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const session = (req as any).auth;
+  const session = await getSession(req);
 
   if (process.env.NODE_ENV === "production") {
     const url = req.nextUrl.clone();

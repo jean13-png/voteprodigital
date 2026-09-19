@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { db, candidates } from "@/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
@@ -11,7 +11,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
+  const session = await getSession(req);
   if (!session || session.user?.role !== "admin") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
@@ -67,10 +67,10 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
+  const session = await getSession(req);
   if (!session || session.user?.role !== "admin") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }

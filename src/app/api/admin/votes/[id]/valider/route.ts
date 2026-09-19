@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { db, votes, candidates } from "@/db";
 import { eq } from "drizzle-orm";
 import { sendVoteValidatedNotification } from "@/lib/email";
 import { auditLog } from "@/lib/audit-log";
 
 export async function PATCH(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
+  const session = await getSession(req);
   if (!session || session.user?.role !== "admin") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }

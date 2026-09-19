@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { getCsrfFromCookie, CSRF_COOKIE } from "@/lib/csrf";
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
+  const session = await getSession(req);
   if (!session) {
     return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
   }
