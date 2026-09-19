@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { csrfFetch } from "@/lib/csrf";
 
 export default function ToggleActifButton({ id, actif }: { id: number; actif: boolean }) {
   const router = useRouter();
@@ -10,7 +11,7 @@ export default function ToggleActifButton({ id, actif }: { id: number; actif: bo
 
   async function toggle() {
     setLoading(true);
-    await fetch(`/api/admin/candidats/${id}/toggle`, { method: "PATCH" });
+    await csrfFetch(`/api/admin/candidats/${id}/toggle`, { method: "PATCH" });
     setCurrent(!current);
     setLoading(false);
     router.refresh();

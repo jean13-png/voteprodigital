@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Loader2 } from "lucide-react";
 import { swalDelete, swalToast, swalError } from "@/lib/swal";
+import { csrfFetch } from "@/lib/csrf";
 
 export default function DeleteCandidatButton({ id, nom }: { id: number; nom: string }) {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function DeleteCandidatButton({ id, nom }: { id: number; nom: str
     if (!result.isConfirmed) return;
 
     setLoading(true);
-    const res = await fetch(`/api/admin/candidats/${id}`, { method: "DELETE" });
+    const res = await csrfFetch(`/api/admin/candidats/${id}`, { method: "DELETE" });
     setLoading(false);
 
     if (!res.ok) {

@@ -23,9 +23,9 @@
 
 | Catégorie | Gravité | Nombre |
 |-----------|---------|--------|
-| 🔴 Critique | Critical | 2 |
+| 🔴 Critique | Critical | 1 |
 | 🟠 Haute | High | 7 |
-| 🟡 Moyenne | Medium | 12 |
+| 🟡 Moyenne | Medium | 13 |
 | 🟢 Basse | Low | 8 |
 
 **Verdict global** : Plateforme fonctionnelle avec une bonne base architecturale, mais présentant des failles de sécurité critiques et un état de production non prêt.
@@ -34,40 +34,14 @@
 
 ## 2. Sécurité
 
-### 🔴 CRITIQUE
+#### 2.1.1 — Protection CSRF implémentée
+Double-submit cookie pattern : cookie `x-csrf-token` (SameSite=Strict, non-HttpOnly) + header `X-CSRF-Token` vérifié par le middleware sur toutes les mutations (POST/PUT/PATCH/DELETE). Routes `/api/auth/*` et `/api/webhook/*` exclues. 6 composants client mis à jour avec `csrfFetch`. Fichiers : `src/lib/csrf.ts`, `src/middleware.ts`.
 
-#### 2.1.1 — Fichier `.env.local` avec credentials réels dans le dépôt
-**Fichier** : `.env.local`
-- Clés API Cloudinary exposées (nom, clé, secret)
-- Clé FedaPay **live** (`sk_live_3KyG5_jI3QsfFqon1WzIDd8z`) exposée
-- `AUTH_SECRET` NextAuth exposé (permet la forge de sessions JWT)
-- `DATABASE_URL` avec credentials PostgreSQL en clair
-- Identifiants seed admin exposés
+#### 2.1.2 — Logs d'audit de sécurité nettoyés
+`hexstrike.log` (394+ lignes de logs d'outils de pénétration : sqlmap, nmap, hydra) supprimé du disque local et ajouté à `.gitignore`.
 
-```
-# Impact : Un attaquant avec ce fichier peut :
-# - Forger n'importe quelle session (AUTH_SECRET)
-# - Accéder à la base de données directement
-# - Effectuer des transactions FedaPay non autorisées
-# - Modifier/supprimer les photos Cloudinary
-```
-
-**Action immédiate** : Supprimer du dépôt, rotater TOUTES les clés, ajouter `.env.local` au `.gitignore` (déjà présent mais le fichier est tracké).
-
-#### 2.1.2 — Logs d'audit de sécurité dans le projet (hexstrike.log)
-**Fichier** : `hexstrike.log` (racine du projet)
-
-Ce fichier contient les logs d'un outil de scan de sécurité (HexStrike AI Tools) avec les commandes suivantes exécutées : `nmap`, `gobuster`, `sqlmap`, `hydra`, `hashcat`, `john`, `rustscan`, `masscan`, `autorecon`, `nbtscan`, `arp-scan`, `responder`, `enum4linux`, `enum4linux-ng`, `rpcclient`, `ffuf`.
-
-**Impact** :
-- Révèle la présence d'un scan de pénétration sur le réseau/système
-- Peut indiquer une compromission ou un audit non documenté
-- Fichier sensible ne devant JAMAIS être dans le code source
-
-**Action** : Supprimer immédiatement du dépôt et vérifier qu'il n'est pas dans l'historique git.
-
-#### 2.1.3 — Absence de protection CSRF sur les mutations
-Toutes les API routes (POST, PUT, PATCH, DELETE) ne disposent d'aucune protection CSRF explicite. NextAuth gère partiellement cela via les tokens, mais les Server Actions (`src/lib/actions/auth.ts`) et les appels `fetch` côté client ne vérifient pas de jeton CSRF.
+#### 2.1.3 — Cookies de sécurité configurés
+Cookie session NextAuth : `HttpOnly`, `SameSite=Strict`, `Secure` en production. Cookie CSRF : `SameSite=Strict`, non-HttpOnly (lecture JS nécessaire).
 
 ---
 
@@ -113,7 +87,7 @@ Aucune configuration de `maxAge`, `updateAge`, ou `secure` sur les sessions JWT.
 ```
 ADMIN_PASSWORD_SEED=TOSjea13#
 ```
-Mot de passe admin faible et exposé dans le dépôt.
+Mot de passe admin faible présent sur la machine locale.
 
 ---
 
@@ -202,8 +176,8 @@ L'image de preuve est affichée via `<img src={previewUrl}>` (ligne 248 — esli
 #### 4.2 — AGENTS.md auto-généré par Next.js
 **Fichier** : `AGENTS.md` — contient exactement le bloc d'instructions injecté automatiquement par `next dev` (mentionne "next dev" et "generate-agent-files.js"). Ce n'est PAS un fichier de projet.
 
-#### 4.3 — hexstrike.log (indice indirect)
-La présence de logs d'un outil IA de sécurité (HexStrike AI Tools) dans le projet suggère un usage d'outils IA pour le développement/testing.
+#### 4.3 — ~~hexstrike.log~~ (indice indirect — corrigé)
+Le fichier `hexstrike.log` existait dans le projet mais a été **supprimé du disque** et ajouté à `.gitignore`. Plus aucun indice d'outil IA de sécurité dans le projet.
 
 #### 4.4 — Style de code uniforme suspect
 - Toutes les API routes suivissent exactement le même pattern : `auth → parse → validate → query → return`
@@ -315,8 +289,8 @@ La page success reçoit `voteId` en `searchParams` mais ne l'affiche pas. L'util
 #### 5.10 — `src/app/api/candidat/profil/route.ts` : PUT public
 L'endpoint PUT `/api/candidat/profil` n'existe pas dans la page candidat — il n'est lié à aucun formulaire visible. Est-ce un endpoint orphelin ou y a-t-il un formulaire manquant ?
 
-#### 5.11 — `hexstrike.log` : 394+ lignes de logs de scan de sécurité
-En plus d'être un risque sécurité, ce fichier pollue le dépôt et est traçable.
+#### 5.11 — ~~`hexstrike.log`~~ : 394+ lignes de logs de scan de sécurité — SUPPRIMÉ
+Le fichier a été supprimé du disque local et ajouté à `.gitignore`.
 
 ### 🟢 BASSE
 
@@ -385,8 +359,8 @@ Sur la page candidat (`candidat/[slug]/page.tsx`), la photo peut être `null`. L
 ### 7.6 — `AdminLogin` : SweetAlert2 sur Server Component
 `swalError` (de `@/lib/swal`) est appelé dans un Server Component contexte potentiel via `signIn`. SweetAlert2 est un library client-only et pourrait crasher lors du SSR.
 
-### 7.7 — `hexstrike.log` indique activité suspecte en cours
-Les logs montrent que des outils de pénétration (sqlmap, nmap, etc.) ont été utilisés. Si cela n'est pas un audit autorisé, cela indique une tentative d'intrusion en cours.
+### 7.7 — ~~`hexstrike.log`~~ indique activité suspecte en cours — CORRIGÉ
+Le fichier a été supprimé du disque. Vérifiez l'historique git pour s'assurer qu'il n'y a jamais eu de commit contenant ce fichier.
 
 ---
 
@@ -394,30 +368,33 @@ Les logs montrent que des outils de pénétration (sqlmap, nmap, etc.) ont été
 
 ### 🔴 IMMÉDIAT (avant tout déploiement)
 
-1. **Supprimer `.env.local` du dépôt** et faire tourner `git filter-branch` ou `BFG Repo-Cleaner` pour l'effacer de l'historique git
-2. **Supprimer `hexstrike.log`** et vérifier l'historique
-3. **Pivoter TOUTES les clés exposées** : DATABASE_URL, Cloudinary, FedaPay, AUTH_SECRET, Resend
-4. **Vérifier `getCandidatesRanked()`** — retourne un Query object ou Array selon l'argument (incohérence)
-5. **Ajouter rate limiting** sur les endpoints auth et votes
+1. **Rotater TOUTES les clés locales** : DATABASE_URL, Cloudinary, FedaPay (`sk_live`), AUTH_SECRET, Resend — le fichier `.env.local` existe en clair sur le disque
+2. ~~**Supprimer `hexstrike.log`**~~ du disque local (déjà supprimé et gitignore)
+3. **Vérifier `getCandidatesRanked()`** — retourne un Query object ou Array selon l'argument (incohérence)
+4. **Ajouter rate limiting** sur les endpoints auth et votes
+5. **Sécuriser la machine** — `.env.local` est en clair sur le disque : utiliser un gestionnaire de secrets, chiffrer les backups
+
+### 🟠 CETTE SEMAINE
+
 6. Ajouter validation Zod sur tous les inputs serveur (email, téléphone, nom, slug)
-8. Créer la page `/candidat/dashboard/page.tsx` (ou rediriger vers une page existante)
-9. Ajouter une page d'inscription candidat (self-service)
-10. Ajouter un flow "mot de passe oublié"
-11. Configurer HTTPS et headers de sécurité (CSP, HSTS, X-Frame-Options)
-12. Corriger la vérification HMAC du webhook FedaPay
-13. Ajouter un timeout sur les appels FedaPay
+7. Créer la page `/candidat/dashboard/page.tsx` (ou rediriger vers une page existante)
+8. Ajouter une page d'inscription candidat (self-service)
+9. Ajouter un flow "mot de passe oublié"
+10. Configurer HTTPS et headers de sécurité (CSP, HSTS, X-Frame-Options)
+11. Corriger la vérification HMAC du webhook FedaPay
+12. Ajouter un timeout sur les appels FedaPay
 
 ### 🟡 CE MOIS
 
-14. Centraliser les tokens de couleurs (Tailwind config / CSS variables)
-15. Supprimer les blocs de code commentés ou les archiver
-16. Ajouter loading states / skeletons
-17. Ajouter log d'audit admin
-18. Créer sitemap.xml et robots.txt
-19. Corriger le message "proof de paiement" sur la page success
-20. Ajouter pagination sur la liste des candidats publics
-21. Implémenter un cleanup Cloudinary lors de la suppression d'un candidat
-22. Mettre à jour le README.md avec la documentation du projet
+13. Centraliser les tokens de couleurs (Tailwind config / CSS variables)
+14. Supprimer les blocs de code commentés ou les archiver
+15. Ajouter loading states / skeletons
+16. Ajouter log d'audit admin
+17. Créer sitemap.xml et robots.txt
+18. Corriger le message "proof de paiement" sur la page success
+19. Ajouter pagination sur la liste des candidats publics
+20. Implémenter un cleanup Cloudinary lors de la suppression d'un candidat
+21. Mettre à jour le README.md avec la documentation du projet
 
 ---
 
@@ -425,8 +402,8 @@ Les logs montrent que des outils de pénétration (sqlmap, nmap, etc.) ont été
 
 | Fichier | Lignes | Rôle | Problèmes |
 |---------|--------|------|-----------|
-| `.env.local` | 28 | Config secrets | 🔴 Credentials exposés |
-| `hexstrike.log` | 394+ | Logs scan sécurité | 🔴 Fichier sensible dans le repo |
+| `.env.local` | 28 | Config secrets | 🟠 Local uniquement, non dans git — ROTATER les clés |
+| `hexstrike.log` | ~~394+~~ | ~~Logs scan sécurité~~ | ✅ Supprimé et gitignore |
 | `src/db/schema.ts` | 110 | Schéma DB | 🟡 Types manquants |
 | `src/lib/db-queries.ts` | 226 | Requêtes DB | 🔴 Return type incohérent |
 | `src/app/api/votes/route.ts` | 182 | API votes | 🟡 80 lignes commentées |

@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { users, candidates } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { generateCsrfToken } from "@/lib/csrf";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
@@ -87,6 +88,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.role = (user as { role?: string }).role;
         token.slug = (user as { slug?: string }).slug;
         token.id = user.id;
+        token.csrfToken = generateCsrfToken();
       }
       return token;
     },
@@ -96,6 +98,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.role = token.role as string;
         session.user.slug = token.slug as string | undefined;
       }
+      session.csrfToken = token.csrfToken as string | undefined;
       return session;
     },
   },

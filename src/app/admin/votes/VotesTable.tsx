@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Search, CheckCircle, XCircle, Loader2, Image as ImageIcon } from "lucide-react";
 import { swalConfirm, swalToast, swalError } from "@/lib/swal";
+import { csrfFetch } from "@/lib/csrf";
 
 const statutBadge: Record<string, string> = {
   en_attente: "bg-yellow-100 text-yellow-700",
@@ -81,7 +82,7 @@ export default function VotesTable({ data, currentStatut, currentSearch }: Props
     if (!result.isConfirmed) return;
 
     setLoadingId(vote.id);
-    const res = await fetch(`/api/admin/votes/${vote.id}/${action}`, { method: "PATCH" });
+    const res = await csrfFetch(`/api/admin/votes/${vote.id}/${action}`, { method: "PATCH" });
     setLoadingId(null);
 
     if (!res.ok) {

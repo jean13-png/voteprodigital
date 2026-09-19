@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { swalError, swalSuccess } from "@/lib/swal";
+import { csrfFetch } from "@/lib/csrf";
 
 interface Props {
   candidatId: number;
@@ -38,7 +39,7 @@ export default function ProfilForm({ candidatId, defaultValues }: Props) {
       body.newPassword = newPassword;
     }
 
-    const res = await fetch("/api/candidat/profil", {
+    const res = await csrfFetch("/api/candidat/profil", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

@@ -6,6 +6,7 @@ import { Loader2, Upload, X, Eye, EyeOff, User } from "lucide-react";
 import { DOMAINES } from "@/lib/constants";
 import Image from "next/image";
 import { swalError, swalSuccess } from "@/lib/swal";
+import { csrfFetch } from "@/lib/csrf";
 
 interface CandidatFormProps {
   mode: "create" | "edit";
@@ -77,7 +78,7 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
         : `/api/admin/candidats/${defaultValues.id}`;
     const method = mode === "create" ? "POST" : "PUT";
 
-    const res = await fetch(url, { method, body: formData });
+    const res = await csrfFetch(url, { method, body: formData });
     const data = await res.json();
     setLoading(false);
 

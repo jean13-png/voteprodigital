@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Loader2, Phone, User, Hash } from "lucide-react";
 import { VOTE_PRICE } from "@/lib/constants";
 import { swalError, swalToast } from "@/lib/swal";
+import { csrfFetch } from "@/lib/csrf";
 
 interface VoteFormProps {
   candidatId: number;
@@ -61,7 +62,7 @@ export default function VoteForm({ candidatId, candidatSlug }: VoteFormProps) {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/votes", {
+      const res = await csrfFetch("/api/votes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
