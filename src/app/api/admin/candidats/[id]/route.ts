@@ -1,0 +1,81 @@
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { db, candidates } from "@/db";
+import { eq } from "drizzle-orm";
+import bcrypt from "bcryptjs";
+import { uploadToCloudinary, isCloudinaryConfigured } from "@/lib/cloudinary";
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth();
+  if (!session || session.user?.role !== "admin") {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const candidatId = parseInt(id);
+
+  try {
+    const formData = await req.formData();
+
+    const nom = (formData.get("nom") as string)?.trim();
+    const email = (formData.get("email") as string)?.trim().toLowerCase();
+    const slug = (formData.get("slug") as string)?.trim().toLowerCase();
+    const password = formData.get("password") as string | null;
+    const bio = (formData.get("bio") as string)?.trim() || null;
+    const domaine = formData.get("domaine") as string;
+    const videoUrl = (formData.get("videoUrl") as string)?.trim() || null;
+    const photoFile = formData.get("photo") as File | null;
+
+    const updateData: Record<string, unknown> = {
+      nom,
+      email,
+      slug,
+      bio,
+      domaine,
+      videoUrl,
+      updatedAt: new Date(),
+    };
+
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 12);
+    }
+
+    if (photoFile && photoFile.size > 0 && isCloudinaryConfigured()) {
+      const buffer = Buffer.from(await photoFile.arrayBuffer());
+      updateData.photo = await uploadToCloudinary(
+        buffer,
+        "prodigital_candidats",
+        `${slug}_${Date.now()}`
+      );
+    }
+
+    await db
+      .update(candidates)
+      .set(updateData)
+      .where(eq(candidates.id, candidatId));
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Update candidate error:", err);
+    return NextResponse.json({ error: "Erreur serveur." }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth();
+  if (!session || session.user?.role !== "admin") {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  }
+
+  const { id } = await params;
+
+  await db.delete(candidates).where(eq(candidates.id, parseInt(id)));
+
+  return NextResponse.json({ success: true });
+}
