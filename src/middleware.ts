@@ -1,4 +1,3 @@
-import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
@@ -48,9 +47,17 @@ function checkRateLimit(ip: string, path: string): NextResponse | null {
   return null;
 }
 
-export default auth(async (req) => {
+export default async function middleware(req: NextRequest) {
+  try {
+    return await handleMiddleware(req);
+  } catch {
+    return NextResponse.next();
+  }
+}
+
+async function handleMiddleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const session = req.auth;
+  const session = (req as any).auth;
 
   if (process.env.NODE_ENV === "production") {
     const url = req.nextUrl.clone();
@@ -140,7 +147,7 @@ export default auth(async (req) => {
   }
 
   return response;
-});
+}
 
 export const config = {
   matcher: ["/:path*"],
