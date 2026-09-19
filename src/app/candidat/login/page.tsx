@@ -104,12 +104,15 @@ export default function CandidatLoginPage() {
         </div>
 
         <div className="text-center mt-6 space-y-2">
+          <Link href="/candidat/mot-de-passe-oublie" className="text-sm text-[#1B2A6B] hover:underline block">
+            Mot de passe oublié ?
+          </Link>
+          <Link href="/candidat/inscription" className="text-sm text-[#1B2A6B] hover:underline block">
+            Créer un compte
+          </Link>
           <Link href="/" className="text-sm text-[#1B2A6B] hover:underline block">
             Retour au site
           </Link>
-          <p className="text-xs text-gray-400">
-            ProDigital Center &copy; {new Date().getFullYear()}
-          </p>
         </div>
       </div>
     </div>

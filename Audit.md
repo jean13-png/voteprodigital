@@ -53,15 +53,19 @@
 
 ### 🟠 HAUTE
 
-#### 3.1 — Page candidat dashboard vide
-**Fichier** : `src/app/candidat/dashboard/page.tsx` — **fichier inexistant**
-Le layout `candidat/layout.tsx` est vide (ne rend rien). L'accès `/candidat/dashboard` est protégé par le middleware mais la page n'existe pas → erreur 404 pour les candidats connectés.
+#### 3.1 — Page candidat dashboard ✅ (faux positif)
+Le fichier `src/app/candidat/dashboard/page.tsx` existe et est pleinement fonctionnel (profil, statistiques, historique des votes, lien de partage). Aucune action nécessaire.
 
-#### 3.2 — Compte candidat non auto-créé
-Les candidats n'ont pas de page d'inscription. Ils doivent être créés manuellement par un admin via `/admin/candidats/nouveau`. Aucune workflow de self-service pour les candidats.
+#### 3.2 — Compte candidat auto-créé ✅
+- Page : `src/app/candidat/inscription/page.tsx` — formulaire nom, email, téléphone, mot de passe
+- API : `src/app/api/auth/candidate/register/route.ts` — création avec validation (email, téléphone, mdp ≥ 8, unicité)
+- Lien "Créer un compte" ajouté sur la page de connexion candidat
 
-#### 3.3 — Pas de flow "mot de passe oublié"
-Ni pour les admins ni pour les candidats. Un oubli de mot de passe verrouille l'utilisateur.
+#### 3.3 — Flow "mot de passe oublié" ✅
+- Page : `src/app/candidat/mot-de-passe-oublie/page.tsx` — demande email + reset avec token
+- API : `src/app/api/auth/forgot-password/route.ts` — token (1h) + email
+- API : `src/app/api/auth/reset-password/route.ts` — vérifie token + met à jour mdp
+- Lien "Mot de passe oublié ?" ajouté sur la page connexion candidat
 
 ### 🟡 MOYENNE
 

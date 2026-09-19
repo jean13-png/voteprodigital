@@ -111,6 +111,12 @@ export default function AdminLoginPage() {
         <p className="text-center text-xs text-gray-400 mt-6">
           ProDigital Center &copy; {new Date().getFullYear()}
         </p>
+
+        <div className="text-center mt-2 space-y-1">
+          <Link href="/candidat/login" className="text-sm text-[#1B2A6B] hover:underline block">
+            Espace candidat
+          </Link>
+        </div>
       </div>
     </div>
   );
