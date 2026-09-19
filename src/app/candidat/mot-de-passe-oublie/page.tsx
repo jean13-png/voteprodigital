@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Link2, Lock, Mail, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { swalError, swalSuccess } from "@/lib/swal";
+import { swalSuccess } from "@/lib/swal";
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -180,5 +180,13 @@ export default function ForgotPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#F5A623]" /></div>}>
+      <ForgotPasswordContent />
+    </Suspense>
   );
 }
