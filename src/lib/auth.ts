@@ -47,6 +47,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Mot de passe", type: "password" },
       },
       async authorize(credentials) {
+        console.log('[NextAuth] admin.authorize called', { email: credentials?.email });
         if (!credentials?.email || !credentials?.password) return null;
 
         const result = await db
@@ -81,6 +82,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Mot de passe", type: "password" },
       },
       async authorize(credentials) {
+        console.log('[NextAuth] candidate.authorize called', { email: credentials?.email });
         if (!credentials?.email || !credentials?.password) return null;
 
         const result = await db
@@ -110,6 +112,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
   callbacks: {
     async jwt({ token, user }) {
+      console.log('[NextAuth] jwt callback', { user: user ? (user as any).email : undefined, token });
       if (user) {
         token.role = (user as { role?: string }).role;
         token.slug = (user as { slug?: string }).slug;
@@ -119,6 +122,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token;
     },
     async session({ session, token }) {
+      console.log('[NextAuth] session callback', { sessionUser: session.user?.email, token });
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
