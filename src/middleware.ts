@@ -128,13 +128,19 @@ async function handleMiddleware(req: NextRequest) {
       !pathname.startsWith("/api/auth") &&
       !pathname.startsWith("/api/webhook")
     ) {
-      const cookieToken = req.cookies.get(CSRF_COOKIE)?.value;
-      const headerToken = req.headers.get(CSRF_HEADER);
-      if (!verifyCsrf(headerToken, cookieToken)) {
-        return NextResponse.json(
-          { error: "Token CSRF invalide ou absent." },
-          { status: 403 }
-        );
+      // Les Server Actions Next.js (header "Next-Action" présent) sont
+      // protégées par le framework (même origine + body signé) : on les
+      // exclut de la vérification CSRF manuelle.
+      const isServerAction = !!req.headers.get("next-action");
+      if (!isServerAction) {
+        const cookieToken = req.cookies.get(CSRF_COOKIE)?.value;
+        const headerToken = req.headers.get(CSRF_HEADER);
+        if (!verifyCsrf(headerToken, cookieToken)) {
+          return NextResponse.json(
+            { error: "Token CSRF invalide ou absent." },
+            { status: 403 }
+          );
+        }
       }
     }
   }
