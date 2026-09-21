@@ -47,29 +47,50 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Mot de passe", type: "password" },
       },
       async authorize(credentials) {
-        console.log('[NextAuth] admin.authorize called', { email: credentials?.email });
-        if (!credentials?.email || !credentials?.password) return null;
+        const start = Date.now();
+        console.log('[NextAuth] admin.authorize start', { email: credentials?.email });
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            console.log('[NextAuth] admin.authorize missing credentials', { duration: Date.now() - start });
+            return null;
+          }
 
-        const result = await db
-          .select()
-          .from(users)
-          .where(eq(users.email, credentials.email as string));
+          const dbStart = Date.now();
+          const result = await db
+            .select()
+            .from(users)
+            .where(eq(users.email, credentials.email as string));
+          console.log('[NextAuth] admin.authorize dbQuery done', { duration: Date.now() - dbStart });
 
-        const user = result[0];
-        if (!user) return null;
+          const user = result[0];
+          if (!user) {
+            console.log('[NextAuth] admin.authorize user not found', { email: credentials?.email, duration: Date.now() - start });
+            return null;
+          }
 
-        const passwordMatch = await bcrypt.compare(
-          credentials.password as string,
-          user.password
-        );
-        if (!passwordMatch) return null;
+          const bcryptStart = Date.now();
+          const passwordMatch = await bcrypt.compare(
+            credentials.password as string,
+            user.password
+          );
+          console.log('[NextAuth] admin.authorize bcrypt done', { duration: Date.now() - bcryptStart });
 
-        return {
-          id: String(user.id),
-          name: user.name,
-          email: user.email,
-          role: "admin",
-        };
+          if (!passwordMatch) {
+            console.log('[NextAuth] admin.authorize password mismatch', { email: credentials?.email, duration: Date.now() - start });
+            return null;
+          }
+
+          console.log('[NextAuth] admin.authorize success', { email: credentials?.email, duration: Date.now() - start });
+          return {
+            id: String(user.id),
+            name: user.name,
+            email: user.email,
+            role: "admin",
+          };
+        } catch (err) {
+          console.error('[NextAuth] admin.authorize error', err, { duration: Date.now() - start });
+          throw err;
+        }
       },
     }),
 
@@ -82,30 +103,51 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Mot de passe", type: "password" },
       },
       async authorize(credentials) {
-        console.log('[NextAuth] candidate.authorize called', { email: credentials?.email });
-        if (!credentials?.email || !credentials?.password) return null;
+        const start = Date.now();
+        console.log('[NextAuth] candidate.authorize start', { email: credentials?.email });
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            console.log('[NextAuth] candidate.authorize missing credentials', { duration: Date.now() - start });
+            return null;
+          }
 
-        const result = await db
-          .select()
-          .from(candidates)
-          .where(eq(candidates.email, credentials.email as string));
+          const dbStart = Date.now();
+          const result = await db
+            .select()
+            .from(candidates)
+            .where(eq(candidates.email, credentials.email as string));
+          console.log('[NextAuth] candidate.authorize dbQuery done', { duration: Date.now() - dbStart });
 
-        const candidate = result[0];
-        if (!candidate || !candidate.actif) return null;
+          const candidate = result[0];
+          if (!candidate || !candidate.actif) {
+            console.log('[NextAuth] candidate.authorize not found or inactive', { email: credentials?.email, duration: Date.now() - start });
+            return null;
+          }
 
-        const passwordMatch = await bcrypt.compare(
-          credentials.password as string,
-          candidate.password
-        );
-        if (!passwordMatch) return null;
+          const bcryptStart = Date.now();
+          const passwordMatch = await bcrypt.compare(
+            credentials.password as string,
+            candidate.password
+          );
+          console.log('[NextAuth] candidate.authorize bcrypt done', { duration: Date.now() - bcryptStart });
 
-        return {
-          id: String(candidate.id),
-          name: candidate.nom,
-          email: candidate.email,
-          role: "candidate",
-          slug: candidate.slug,
-        };
+          if (!passwordMatch) {
+            console.log('[NextAuth] candidate.authorize password mismatch', { email: credentials?.email, duration: Date.now() - start });
+            return null;
+          }
+
+          console.log('[NextAuth] candidate.authorize success', { email: credentials?.email, duration: Date.now() - start });
+          return {
+            id: String(candidate.id),
+            name: candidate.nom,
+            email: candidate.email,
+            role: "candidate",
+            slug: candidate.slug,
+          };
+        } catch (err) {
+          console.error('[NextAuth] candidate.authorize error', err, { duration: Date.now() - start });
+          throw err;
+        }
       },
     }),
   ],
