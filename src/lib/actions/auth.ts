@@ -2,8 +2,9 @@
 
 import { signIn, signOut } from "@/lib/auth";
 import { AuthError } from "next-auth";
-import { redirect } from "next/navigation";
 
+// Retourne undefined en cas de succès (le client force un rechargement complet).
+// Retourne { error } en cas d'échec (le client affiche le message).
 export async function adminLogin(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
@@ -12,7 +13,7 @@ export async function adminLogin(formData: FormData) {
     await signIn("admin", {
       email,
       password,
-      redirectTo: "/admin/dashboard",
+      redirect: false,
     });
   } catch (error) {
     if (error instanceof AuthError) {
@@ -20,6 +21,10 @@ export async function adminLogin(formData: FormData) {
     }
     throw error;
   }
+  // Cookie JWT défini par NextAuth dans la réponse. On retourne sans rediriger
+  // pour que le client puisse forcer un rechargement complet (évite la boucle
+  // de redirection client/serveur).
+  return { success: true };
 }
 
 export async function candidateLogin(formData: FormData) {
@@ -30,7 +35,7 @@ export async function candidateLogin(formData: FormData) {
     await signIn("candidate", {
       email,
       password,
-      redirectTo: "/candidat/dashboard",
+      redirect: false,
     });
   } catch (error) {
     if (error instanceof AuthError) {
@@ -38,9 +43,9 @@ export async function candidateLogin(formData: FormData) {
     }
     throw error;
   }
+  return { success: true };
 }
 
 export async function logout(redirectTo = "/") {
   await signOut({ redirectTo });
-  redirect(redirectTo);
 }
