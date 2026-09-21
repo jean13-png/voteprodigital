@@ -1,35 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { Lock, Mail, Eye, EyeOff, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { swalError } from "@/lib/swal";
+import { adminLogin } from "@/lib/actions/auth";
 
 export default function AdminLoginPage() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
-    const form = e.currentTarget;
-    const email = (form.elements.namedItem("email") as HTMLInputElement).value;
-    const password = (form.elements.namedItem("password") as HTMLInputElement).value;
+    const formData = new FormData(e.currentTarget);
+    const res = await adminLogin(formData);
 
-    const result = await signIn("admin", { email, password, redirect: false });
-
-    if (result?.error) {
+    if (res?.error) {
       setLoading(false);
-      await swalError("Connexion refusée", "Email ou mot de passe incorrect.");
-    } else {
-      router.push("/admin/dashboard");
-      router.refresh();
+      setError(res.error);
     }
+    // Si succès, la Server Action redirige vers /admin/dashboard via redirect()
   }
 
   return (
@@ -97,6 +91,10 @@ export default function AdminLoginPage() {
                 </button>
               </div>
             </div>
+
+            {error && (
+              <p className="text-sm text-red-600 text-center">{error}</p>
+            )}
 
             <button
               type="submit"

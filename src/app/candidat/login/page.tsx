@@ -1,34 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { Lock, Mail, Eye, EyeOff, Loader2, GraduationCap } from "lucide-react";
 import Link from "next/link";
-import { swalError } from "@/lib/swal";
+import { candidateLogin } from "@/lib/actions/auth";
 
 export default function CandidatLoginPage() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
-    const form = e.currentTarget;
-    const email = (form.elements.namedItem("email") as HTMLInputElement).value;
-    const password = (form.elements.namedItem("password") as HTMLInputElement).value;
+    const formData = new FormData(e.currentTarget);
+    const res = await candidateLogin(formData);
 
-    const result = await signIn("candidate", { email, password, redirect: false });
-
-    if (result?.error) {
+    if (res?.error) {
       setLoading(false);
-      await swalError("Connexion refusée", "Email ou mot de passe incorrect.");
-    } else {
-      router.push("/candidat/dashboard");
-      router.refresh();
+      setError(res.error);
     }
+    // Si succès, la Server Action redirige vers /candidat/dashboard via redirect()
   }
 
   return (
@@ -91,6 +85,10 @@ export default function CandidatLoginPage() {
                 </button>
               </div>
             </div>
+
+            {error && (
+              <p className="text-sm text-red-600 text-center">{error}</p>
+            )}
 
             <button
               type="submit"
