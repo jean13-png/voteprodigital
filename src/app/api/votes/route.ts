@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, votes, candidates } from "@/db";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { logError } from "@/lib/log-error";
 import { VOTE_PRICE } from "@/lib/constants";
 import { createFedaPayTransaction } from "@/lib/fedapay";
+import { buildVoteRequestKey, claimIdempotentRequest } from "@/lib/idempotency";
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,21 +26,40 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (nombreVotes < 1 || nombreVotes > 100) {
+    const normalizedCandidatId = Number(candidatId);
+    const normalizedNombreVotes = Number(nombreVotes);
+    const normalizedTelephone = String(telephone).trim();
+    const normalizedNom = String(nomVotant).trim();
+
+    const idempotencyKey = buildVoteRequestKey({
+      candidatId: normalizedCandidatId,
+      telephone: normalizedTelephone,
+      nombreVotes: normalizedNombreVotes,
+      nomVotant: normalizedNom,
+    });
+
+    if (!claimIdempotentRequest(idempotencyKey, 15000)) {
+      return NextResponse.json(
+        { error: "Demande déjà en cours. Merci de patienter quelques secondes." },
+        { status: 409 }
+      );
+    }
+
+    if (normalizedNombreVotes < 1 || normalizedNombreVotes > 100) {
       return NextResponse.json(
         { error: "Le nombre de votes doit être entre 1 et 100." },
         { status: 400 }
       );
     }
 
-    if (!/^0[1-9][0-9]{8}$/.test(telephone.trim())) {
+    if (!/^0[1-9][0-9]{8}$/.test(normalizedTelephone)) {
       return NextResponse.json(
         { error: "Format de téléphone invalide." },
         { status: 400 }
       );
     }
 
-    if (!nomVotant.trim()) {
+    if (!normalizedNom) {
       return NextResponse.json(
         { error: "Le nom du votant est requis." },
         { status: 400 }
@@ -49,7 +69,7 @@ export async function POST(req: NextRequest) {
     const candidatRes = await db
       .select()
       .from(candidates)
-      .where(eq(candidates.id, candidatId));
+      .where(eq(candidates.id, normalizedCandidatId));
     const candidat = candidatRes[0];
 
     if (!candidat || !candidat.actif) {
@@ -59,28 +79,35 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Vérifier l'unicité : pas de double vote pour le même candidat
-    const existingVote = await db
+    const montant = normalizedNombreVotes * VOTE_PRICE;
+
+    const recentVotes = await db
       .select()
       .from(votes)
-      .where(and(eq(votes.telephone, telephone.trim()), eq(votes.candidateId, candidatId)));
-    if (existingVote.length > 0) {
+      .where(eq(votes.telephone, normalizedTelephone));
+
+    const recentDuplicate = recentVotes.some((vote) =>
+      vote.candidateId === normalizedCandidatId &&
+      vote.nomVotant === normalizedNom &&
+      vote.nombreVotes === normalizedNombreVotes &&
+      vote.statut === "en_attente" &&
+      Date.now() - new Date(vote.createdAt).getTime() < 15000
+    );
+
+    if (recentDuplicate) {
       return NextResponse.json(
-        { error: "Vous avez déjà voté." },
+        { error: "Un vote identique a déjà été initié il y a très peu de temps." },
         { status: 409 }
       );
     }
 
-    const montant = nombreVotes * VOTE_PRICE;
-
-    // Créer le vote en attente
     const result = await db
       .insert(votes)
       .values({
-        candidateId: candidatId,
-        nomVotant: nomVotant.trim(),
-        telephone: telephone.trim(),
-        nombreVotes,
+        candidateId: normalizedCandidatId,
+        nomVotant: normalizedNom,
+        telephone: normalizedTelephone,
+        nombreVotes: normalizedNombreVotes,
         montant,
         statut: "en_attente",
       })
@@ -93,9 +120,9 @@ export async function POST(req: NextRequest) {
     const callbackUrl = `${baseUrl}/api/votes/callback/${vote.id}`;
 
     const fedapay = await createFedaPayTransaction({
-      nomVotant: nomVotant.trim(),
-      telephone: telephone.trim(),
-      nombreVotes,
+      nomVotant: normalizedNom,
+      telephone: normalizedTelephone,
+      nombreVotes: normalizedNombreVotes,
       montant,
       candidatNom: candidat.nom,
       callbackUrl,

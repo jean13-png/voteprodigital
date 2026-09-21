@@ -39,6 +39,14 @@ export async function POST(req: NextRequest) {
       const vote = voteRes[0];
       if (!vote) return NextResponse.json({ received: true });
 
+      if (vote.statut === "valide" && event === "transaction.approved") {
+        return NextResponse.json({ received: true });
+      }
+
+      if (vote.statut === "refuse" && (event === "transaction.declined" || event === "transaction.canceled")) {
+        return NextResponse.json({ received: true });
+      }
+
       if (event === "transaction.approved") {
         await db
           .update(votes)

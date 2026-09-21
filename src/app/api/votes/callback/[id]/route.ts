@@ -27,6 +27,11 @@ export async function GET(
       const status = transaction.status;
 
       if (status === "approved") {
+        const existingVote = await db.select().from(votes).where(eq(votes.id, voteId));
+        if (existingVote[0]?.statut === "valide") {
+          return NextResponse.redirect(`${baseUrl}/vote/success?voteId=${voteId}`);
+        }
+
         await db
           .update(votes)
           .set({
@@ -55,6 +60,11 @@ export async function GET(
           `${baseUrl}/vote/success?voteId=${voteId}`
         );
       } else if (status === "declined") {
+        const existingVote = await db.select().from(votes).where(eq(votes.id, voteId));
+        if (existingVote[0]?.statut === "refuse") {
+          return NextResponse.redirect(`${baseUrl}/vote/failed?reason=declined`);
+        }
+
         await db
           .update(votes)
           .set({ statut: "refuse", fedapayStatus: "declined" })
@@ -64,7 +74,11 @@ export async function GET(
           `${baseUrl}/vote/failed?reason=declined`
         );
       } else {
-        // Annulé ou autre
+        const existingVote = await db.select().from(votes).where(eq(votes.id, voteId));
+        if (existingVote[0]?.statut === "refuse") {
+          return NextResponse.redirect(`${baseUrl}/vote/failed?reason=canceled`);
+        }
+
         await db
           .update(votes)
           .set({ statut: "refuse", fedapayStatus: status })
