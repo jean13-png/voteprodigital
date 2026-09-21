@@ -19,11 +19,19 @@ const rateStore = new Map<string, RateLimitEntry>();
 
 const RATE_LIMITS: Record<string, { max: number; windowMs: number }> = {
   "/api/votes": { max: 5, windowMs: 10 * 60 * 1000 },
-  "/api/auth": { max: 5, windowMs: 15 * 60 * 1000 },
+  "/api/auth": { max: 30, windowMs: 15 * 60 * 1000 },
   "/api/admin": { max: 30, windowMs: 10 * 60 * 1000 },
 };
 
-function checkRateLimit(ip: string, path: string): NextResponse | null {
+// Routes de lecture (GET) qui ne modifient rien : on ne les rate-limit pas,
+// car NextAuth les appelle à chaque navigation (session, csrf-token).
+const READ_ONLY_PREFIXES = ["/api/auth/session", "/api/auth/csrf-token"];
+
+function checkRateLimit(ip: string, path: string, method: string): NextResponse | null {
+  if (method === "GET" && READ_ONLY_PREFIXES.some((p) => path.startsWith(p))) {
+    return null;
+  }
+
   for (const [prefix, { max, windowMs }] of Object.entries(RATE_LIMITS)) {
     if (!path.startsWith(prefix)) continue;
 
@@ -73,7 +81,7 @@ async function handleMiddleware(req: NextRequest) {
     req.headers.get("x-real-ip") ??
     "unknown";
 
-  const rateLimitResponse = checkRateLimit(clientIP, pathname);
+  const rateLimitResponse = checkRateLimit(clientIP, pathname, req.method);
   if (rateLimitResponse) return rateLimitResponse;
 
   // ─── Protection espace admin ──────────────────────────────────────
