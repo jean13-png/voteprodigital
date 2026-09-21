@@ -8,7 +8,7 @@ import { logError } from "@/lib/log-error";
 import { auditLog } from "@/lib/audit-log";
 
 export async function POST(req: NextRequest) {
-  const session = await getSession(req);
+  const session = await getSession();
   if (!session || session.user?.role !== "admin") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }

@@ -40,17 +40,17 @@ export default async function HomePage() {
                 projets le <strong className="text-white/90">{SOUTENANCE_DATE_FORMATTED}</strong>.
                 Soutenez celui qui mérite votre voix.
               </p>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start sm:justify-start">
                 <Link
                   href="/candidats"
-                  className="bg-[#F5A623] hover:bg-[#e09516] text-white font-semibold px-6 py-3 transition-colors flex items-center gap-2"
+                  className="w-full sm:w-auto bg-[#F5A623] hover:bg-[#e09516] text-white font-semibold px-6 py-3 transition-colors flex items-center justify-center gap-2"
                 >
                   Voir les candidats
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
                   href="#comment-voter"
-                  className="border border-white/30 hover:border-white/60 text-white font-semibold px-6 py-3 transition-colors"
+                  className="w-full sm:w-auto border border-white/30 hover:border-white/60 text-white font-semibold px-6 py-3 transition-colors text-center"
                 >
                   Comment voter ?
                 </Link>
@@ -73,27 +73,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* ─── BANDE INFOS ──────────────────────────────────────────────────── */}
-      <div className="bg-[#F5A623]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#e09516]">
-            {[
-              { value: String(candidatCount), label: "Candidats" },
-              { value: "5", label: "Domaines" },
-              { value: "50 FCFA", label: "Par vote" },
-              { value: "1 000", label: "Objectif / candidat" },
-            ].map((item) => (
-              <div key={item.label} className="py-4 px-5 text-center">
-                <p className="text-white font-extrabold text-xl sm:text-2xl">
-                  {item.value}
-                </p>
-                <p className="text-white/80 text-xs mt-0.5">{item.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* ─── CLASSEMENT ───────────────────────────────────────────────────── */}
       <section className="bg-white py-14">
@@ -187,7 +166,7 @@ export default async function HomePage() {
               },
             ].map((item) => (
               <div key={item.num} className="bg-white p-6 sm:p-8">
-                <p className="text-4xl font-extrabold text-gray-100 mb-4 leading-none">
+                <p className="text-4xl font-extrabold text-[#1B2A6B]/80 mb-4 leading-none opacity-100">
                   {item.num}
                 </p>
                 <h3 className="text-sm font-bold text-[#1B2A6B] mb-2">

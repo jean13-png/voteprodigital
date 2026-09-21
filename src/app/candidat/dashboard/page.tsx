@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { getCandidateVoteStats, getVotesByCandidate, getCandidateById } from "@/lib/db-queries";
 import Link from "next/link";
@@ -21,7 +21,7 @@ const statutLabel: Record<string, string> = {
 };
 
 export default async function CandidatDashboardPage() {
-  const session = await auth();
+  const session = await getSession();
   if (!session || session.user?.role !== "candidate") redirect("/candidat/login");
 
   const candidatId = parseInt(session.user.id);

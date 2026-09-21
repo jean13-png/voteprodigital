@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import AdminShell from "@/components/admin/AdminShell";
 
 export default async function AdminLayout({
@@ -6,7 +6,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  const session = await getSession();
   const isAdmin = session?.user?.role === "admin";
 
   // Page login : pas de sidebar, juste le contenu centré

@@ -6,7 +6,28 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { generateCsrfToken } from "@/lib/csrf";
 
+function getRuntimeBaseUrl() {
+  const configuredUrl =
+    process.env.AUTH_URL ??
+    process.env.NEXTAUTH_URL ??
+    process.env.VERCEL_URL ??
+    "http://localhost:3000";
+
+  const trimmed = configuredUrl.trim();
+
+  if (!trimmed) return "http://localhost:3000";
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+
+  return `https://${trimmed}`;
+}
+
+const runtimeBaseUrl = getRuntimeBaseUrl();
+if (!process.env.AUTH_URL) process.env.AUTH_URL = runtimeBaseUrl;
+if (!process.env.NEXTAUTH_URL) process.env.NEXTAUTH_URL = runtimeBaseUrl;
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  trustHost: true,
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
@@ -15,6 +36,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   pages: {
     signIn: "/admin/login",
   },
+  basePath: "/api/auth",
   providers: [
     // ─── Provider Admin ───────────────────────────────────────────────────────
     Credentials({
@@ -98,13 +120,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async session({ session, token }) {
       if (session.user) {
-      session.user.id = token.id as string;
-      session.user.role = token.role as string;
-      session.user.slug = token.slug as string | undefined;
-    }
-    // @ts-ignore — csrfToken stocké dans le JWT, pas dans le type Session par défaut
-    session.csrfToken = token.csrfToken;
-    return session;
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
+        session.user.slug = token.slug as string | undefined;
+      }
+
+      // @ts-ignore — csrfToken stocké dans le JWT, pas dans le type Session par défaut
+      session.csrfToken = token.csrfToken;
+      return session;
     },
   },
 });

@@ -6,7 +6,7 @@ import bcrypt from "bcryptjs";
 import { logError } from "@/lib/log-error";
 
 export async function PUT(req: NextRequest) {
-  const session = await getSession(req);
+  const session = await getSession();
   if (!session || session.user?.role !== "candidate") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }

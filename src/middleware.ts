@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getSession } from "@/lib/session";
+import { getSessionFromRequest as getSession } from "@/lib/session";
 import {
   CSRF_COOKIE,
   CSRF_HEADER,

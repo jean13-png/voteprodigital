@@ -11,7 +11,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession(req);
+  const session = await getSession();
   if (!session || session.user?.role !== "admin") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
@@ -70,7 +70,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getSession(req);
+  const session = await getSession();
   if (!session || session.user?.role !== "admin") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }

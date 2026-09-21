@@ -23,13 +23,13 @@ function calcTimeLeft(): TimeLeft {
 
 function Bloc({ value, label }: { value: number; label: string }) {
   return (
-    <div className="flex flex-col items-center">
-      <div className="bg-[#1B2A6B] text-white rounded-xl w-16 sm:w-20 h-16 sm:h-20 flex items-center justify-center">
-        <span className="text-2xl sm:text-3xl font-extrabold tabular-nums">
+    <div className="flex min-w-0 flex-col items-center">
+      <div className="bg-[#1B2A6B] text-white rounded-lg w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex items-center justify-center shadow-sm">
+        <span className="text-lg sm:text-2xl md:text-3xl font-extrabold tabular-nums leading-none">
           {String(value).padStart(2, "0")}
         </span>
       </div>
-      <span className="mt-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+      <span className="mt-1.5 text-[10px] sm:text-xs font-semibold text-gray-300 uppercase tracking-wider">
         {label}
       </span>
     </div>
@@ -61,13 +61,13 @@ export default function Countdown() {
   }
 
   return (
-    <div className="flex items-start gap-3 sm:gap-4">
+    <div className="flex w-full max-w-full items-center justify-center gap-2 sm:gap-3 md:gap-4">
       <Bloc value={timeLeft.jours} label="Jours" />
-      <span className="text-2xl font-bold text-[#1B2A6B] mt-4">:</span>
+      <span className="mt-3 text-lg sm:text-2xl font-bold text-white/80">:</span>
       <Bloc value={timeLeft.heures} label="Heures" />
-      <span className="text-2xl font-bold text-[#1B2A6B] mt-4">:</span>
+      <span className="mt-3 text-lg sm:text-2xl font-bold text-white/80">:</span>
       <Bloc value={timeLeft.minutes} label="Minutes" />
-      <span className="text-2xl font-bold text-[#1B2A6B] mt-4">:</span>
+      <span className="mt-3 text-lg sm:text-2xl font-bold text-white/80">:</span>
       <Bloc value={timeLeft.secondes} label="Secondes" />
     </div>
   );

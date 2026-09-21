@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { getCandidateById } from "@/lib/db-queries";
 import ProfilForm from "./ProfilForm";
@@ -8,7 +8,7 @@ import { ArrowLeft } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function CandidatProfilPage() {
-  const session = await auth();
+  const session = await getSession();
   if (!session || session.user?.role !== "candidate") redirect("/candidat/login");
 
   const candidat = await getCandidateById(parseInt(session.user.id));
