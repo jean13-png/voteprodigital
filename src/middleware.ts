@@ -116,7 +116,7 @@ async function handleMiddleware(req: NextRequest) {
   if (!existingCookie) {
     response.cookies.set(CSRF_COOKIE, generateCsrfToken(), {
       httpOnly: false,
-      sameSite: "strict",
+      sameSite: "lax",
       path: "/",
       secure: process.env.NODE_ENV === "production",
     });
