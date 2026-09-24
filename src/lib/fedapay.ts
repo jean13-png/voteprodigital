@@ -3,7 +3,6 @@ import { FedaPay, Transaction } from "fedapay";
 export function initFedaPay() {
   FedaPay.setApiKey(process.env.FEDAPAY_SECRET_KEY!);
   FedaPay.setEnvironment(process.env.FEDAPAY_MODE === "live" ? "live" : "sandbox");
-  FedaPay.setHttpTimeout(30000); // 30 secondes
 }
 
 export interface CreateTransactionParams {
