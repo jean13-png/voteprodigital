@@ -3,7 +3,7 @@ import { getSession } from "@/lib/session";
 import { db, candidates } from "@/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { uploadToCloudinary, isCloudinaryConfigured, deleteFromCloudinary } from "@/lib/cloudinary";
+import { uploadToCloudinary, isCloudinaryConfigured, deleteFromCloudinary, validateImageFile } from "@/lib/cloudinary";
 import { logError } from "@/lib/log-error";
 import { auditLog } from "@/lib/audit-log";
 
@@ -45,13 +45,21 @@ export async function PUT(
       updateData.password = await bcrypt.hash(password, 12);
     }
 
-    if (photoFile && photoFile.size > 0 && isCloudinaryConfigured()) {
-      const buffer = Buffer.from(await photoFile.arrayBuffer());
-      updateData.photo = await uploadToCloudinary(
-        buffer,
-        "prodigital_candidats",
-        `${slug}_${Date.now()}`
-      );
+    if (photoFile && photoFile.size > 0) {
+      if (isCloudinaryConfigured()) {
+        // Validate file before upload
+        const validation = validateImageFile(photoFile);
+        if (!validation.valid) {
+          return NextResponse.json({ error: validation.error }, { status: 400 });
+        }
+
+        const buffer = Buffer.from(await photoFile.arrayBuffer());
+        updateData.photo = await uploadToCloudinary(
+          buffer,
+          "prodigital_candidats",
+          `${slug}_${Date.now()}`
+        );
+      }
     }
 
     await db

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, candidates } from "@/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { logError } from "@/lib/log-error";
 
 function toSlug(text: string): string {
   return text
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, id: result[0].id }, { status: 201 });
   } catch (err) {
-    console.error("Register candidate error:", err);
+    logError("Register candidate", err);
     return NextResponse.json({ error: "Erreur serveur." }, { status: 500 });
   }
 }

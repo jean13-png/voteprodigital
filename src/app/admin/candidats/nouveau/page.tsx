@@ -1,10 +1,11 @@
-import CandidatForm from "@/components/admin/CandidatForm";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import CandidatForm from "@/components/admin/CandidatForm";
 
 export default function NouveauCandidatPage() {
   return (
     <div className="max-w-2xl mx-auto">
+      {/* Header */}
       <div className="mb-6">
         <Link
           href="/admin/candidats"
@@ -19,7 +20,9 @@ export default function NouveauCandidatPage() {
           Ajoutez un nouveau candidat à la compétition.
         </p>
       </div>
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8">
+
+      {/* Formulaire */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
         <CandidatForm mode="create" />
       </div>
     </div>

@@ -5,25 +5,30 @@ import { users, candidates } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
+// Determine base URL with proper fallbacks
 const runtimeBaseUrl =
   process.env.AUTH_URL ??
   process.env.NEXTAUTH_URL ??
-  process.env.VERCEL_URL ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ??
   "http://localhost:3000";
 
-const trimmed = runtimeBaseUrl.trim();
-const baseUrl = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+const baseUrl = runtimeBaseUrl.startsWith("http")
+  ? runtimeBaseUrl
+  : `https://${runtimeBaseUrl}`;
+
+// Set environment variables for NextAuth
 if (!process.env.AUTH_URL) process.env.AUTH_URL = baseUrl;
 if (!process.env.NEXTAUTH_URL) process.env.NEXTAUTH_URL = baseUrl;
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV !== "production",
-  trustHost: true,
+  // Only trust host in development or when explicitly configured
+  trustHost: process.env.NODE_ENV !== "production" || process.env.AUTH_TRUST_HOST === "true",
   basePath: "/api/auth",
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60,
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   cookies: {
     sessionToken: {

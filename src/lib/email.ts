@@ -10,6 +10,20 @@ function getResend() {
 const FROM = process.env.EMAIL_FROM ?? "noreply@prodigitalcenter.com";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "admin@prodigitalcenter.com";
 
+/**
+ * Validate email configuration before sending
+ */
+function isEmailConfigured(): boolean {
+  return !!(process.env.RESEND_API_KEY && FROM && ADMIN_EMAIL);
+}
+
+/**
+ * Validate email address format
+ */
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 // ─── Email admin : nouveau vote reçu ─────────────────────────────────────────
 
 export async function sendNewVoteNotification(vote: {
@@ -21,11 +35,16 @@ export async function sendNewVoteNotification(vote: {
   candidatNom: string;
   preuve?: string | null;
 }) {
-  if (!process.env.RESEND_API_KEY) return;
+  if (!isEmailConfigured()) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[Email] Configuration manquante, email non envoyé");
+    }
+    return;
+  }
 
   try {
     const resend = getResend()!;
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: FROM,
       to: ADMIN_EMAIL,
       subject: `Nouveau vote — ${vote.nomVotant} pour ${vote.candidatNom}`,
@@ -83,8 +102,12 @@ export async function sendNewVoteNotification(vote: {
         </div>
       `,
     });
+
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[Email] Notification nouveau vote envoyée:", result);
+    }
   } catch (err) {
-    logError("Email send", err);
+    logError("Email send (new vote notification)", err);
   }
 }
 
@@ -96,7 +119,7 @@ export async function sendVoteValidatedNotification(vote: {
   montant: number;
   candidatNom: string;
 }) {
-  if (!process.env.RESEND_API_KEY) return;
+  if (!isEmailConfigured()) return;
 
   try {
     const resend = getResend()!;
@@ -124,7 +147,17 @@ export async function sendVoteValidatedNotification(vote: {
 }
 
 export async function sendPasswordResetEmail(email: string, token: string) {
-  if (!process.env.RESEND_API_KEY) return;
+  if (!isEmailConfigured()) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[Email] Configuration manquante, email non envoyé");
+    }
+    return;
+  }
+
+  if (!isValidEmail(email)) {
+    throw new Error("Format email invalide");
+  }
+
   try {
     const resend = getResend()!;
     const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
@@ -136,6 +169,7 @@ export async function sendPasswordResetEmail(email: string, token: string) {
     });
   } catch (err) {
     logError("Password reset email", err);
+    throw err; // Re-throw to handle at route level
   }
 }
 
@@ -243,8 +277,24 @@ function generateReceiptPDF(vote: VoteReceiptData): Buffer {
 }
 
 export async function sendVoteReceipt(vote: VoteReceiptData) {
-  if (!process.env.RESEND_API_KEY) return;
-  if (!vote.email) return;
+  if (!isEmailConfigured()) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[Email] Configuration manquante, récépissé non envoyé");
+    }
+    return;
+  }
+
+  if (!vote.email) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[Email] Pas d'email fourni pour le récépissé");
+    }
+    return;
+  }
+
+  if (!isValidEmail(vote.email)) {
+    logError("Invalid email for receipt", new Error(`Invalid email: ${vote.email}`));
+    return;
+  }
 
   try {
     const resend = getResend()!;

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Loader2, Upload, X, Eye, EyeOff, User } from "lucide-react";
 import { DOMAINES } from "@/lib/constants";
 import { swalError, swalSuccess } from "@/lib/swal";
-import { csrfFetch } from "@/lib/csrf";
 
 interface CandidatFormProps {
   mode: "create" | "edit";
@@ -45,7 +44,9 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
     const file = e.target.files?.[0];
     if (!file) return;
     setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
+    // Créer un aperçu local de l'image
+    const objectUrl = URL.createObjectURL(file);
+    setPhotoPreview(objectUrl);
   }
 
   function handleNomChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -56,48 +57,50 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
     e.preventDefault();
     setLoading(true);
 
-    const form = e.currentTarget;
-    const getValue = (name: string) =>
-      (form.elements.namedItem(name) as HTMLInputElement)?.value ?? "";
+    try {
+      const form = e.currentTarget;
+      const getValue = (name: string) =>
+        (form.elements.namedItem(name) as HTMLInputElement)?.value ?? "";
 
-    const formData = new FormData();
-    formData.append("nom", getValue("nom"));
-    formData.append("email", getValue("email"));
-    formData.append("slug", slugValue);
-    formData.append("bio", getValue("bio"));
-    formData.append("domaine", getValue("domaine"));
-    formData.append("videoUrl", getValue("videoUrl"));
-    const password = getValue("password");
-    if (password) formData.append("password", password);
-    if (photoFile) formData.append("photo", photoFile);
+      const formData = new FormData();
+      formData.append("nom", getValue("nom"));
+      formData.append("email", getValue("email"));
+      formData.append("slug", slugValue);
+      formData.append("bio", getValue("bio"));
+      formData.append("domaine", getValue("domaine"));
+      formData.append("videoUrl", getValue("videoUrl"));
+      const password = getValue("password");
+      if (password) formData.append("password", password);
+      if (photoFile) formData.append("photo", photoFile);
 
-    const url =
-      mode === "create"
-        ? "/api/admin/candidats"
-        : `/api/admin/candidats/${defaultValues.id}`;
-    const method = mode === "create" ? "POST" : "PUT";
+      const url =
+        mode === "create"
+          ? "/api/admin/candidats"
+          : `/api/admin/candidats/${defaultValues.id}`;
+      const method = mode === "create" ? "POST" : "PUT";
 
-    const res = await csrfFetch(url, { method, body: formData });
-    const data = await res.json();
-    setLoading(false);
+      const res = await fetch(url, { method, body: formData });
+      const data = await res.json();
+      setLoading(false);
 
-    if (!res.ok) {
-      await swalError(
-        "Erreur",
-        data.error ?? "Une erreur est survenue. Réessayez."
+      if (!res.ok) {
+        await swalError("Erreur", data.error ?? "Une erreur est survenue.");
+        return;
+      }
+
+      await swalSuccess(
+        mode === "create" ? "Candidat ajouté" : "Modifications enregistrées",
+        mode === "create"
+          ? `${getValue("nom")} a bien été ajouté à la compétition.`
+          : "Le profil du candidat a été mis à jour."
       );
-      return;
+
+      router.push("/admin/candidats");
+      router.refresh();
+    } catch (error) {
+      setLoading(false);
+      await swalError("Erreur", "Impossible de contacter le serveur.");
     }
-
-    await swalSuccess(
-      mode === "create" ? "Candidat ajouté" : "Modifications enregistrées",
-      mode === "create"
-        ? `${getValue("nom")} a bien été ajouté à la compétition.`
-        : "Le profil du candidat a été mis à jour."
-    );
-
-    router.push("/admin/candidats");
-    router.refresh();
   }
 
   const inputClass =
@@ -105,13 +108,6 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-
-      {/* DEV debug: show session indicator */}
-      {process.env.NODE_ENV !== 'production' && (
-        <div className="mb-4 p-3 rounded-lg bg-yellow-50 border border-yellow-200 text-sm text-yellow-800">
-          Environnement: DEV — Vous pouvez voir les états de session côté serveur dans les logs.
-        </div>
-      )}
 
       {/* Photo */}
       <div>
@@ -124,11 +120,10 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
             onClick={() => fileInputRef.current?.click()}
           >
             {photoPreview ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={photoPreview}
-                alt="Aperçu"
-                width={96}
-                height={96}
+                alt="Aperçu photo candidat"
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -150,19 +145,29 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
             {photoPreview && (
               <button
                 type="button"
-                onClick={() => { setPhotoPreview(null); setPhotoFile(null); }}
+                onClick={() => {
+                  setPhotoPreview(null);
+                  setPhotoFile(null);
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
                 className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-600 transition-colors"
               >
                 <X className="w-3.5 h-3.5" /> Supprimer la photo
               </button>
             )}
-            <p className="text-xs text-gray-400">JPG, PNG. Uploadée automatiquement sur Cloudinary.</p>
+            <p className="text-xs text-gray-400">JPG, PNG ou WebP — max 5 MB</p>
           </div>
         </div>
-        <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhoto} className="hidden" />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handlePhoto}
+          className="hidden"
+        />
       </div>
 
-      {/* Infos principales */}
+      {/* Informations */}
       <div>
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
           Informations
@@ -181,9 +186,29 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
               className={inputClass}
             />
           </div>
+
+          {/* Slug affiché en lecture seule en création, éditable en édition */}
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Slug
+            </label>
+            <input
+              name="slug"
+              value={slugValue}
+              onChange={(e) => setSlugValue(e.target.value)}
+              required
+              placeholder="jean-dupont"
+              className={inputClass}
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Généré automatiquement depuis le nom. Utilisé dans les URLs.
+            </p>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Adresse email <span className="text-gray-400 font-normal">(optionnel)</span>
+              Adresse email{" "}
+              <span className="text-gray-400 font-normal">(optionnel)</span>
             </label>
             <input
               name="email"
@@ -193,12 +218,15 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
               className={inputClass}
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Mot de passe
-              {mode === "create" && <span className="text-gray-400 font-normal text-xs ml-1">(optionnel)</span>}
+              Mot de passe{" "}
+              {mode === "create" && (
+                <span className="text-gray-400 font-normal text-xs">(optionnel)</span>
+              )}
               {mode === "edit" && (
-                <span className="text-gray-400 font-normal text-xs ml-1">(vide = inchangé)</span>
+                <span className="text-gray-400 font-normal text-xs">(vide = inchangé)</span>
               )}
             </label>
             <div className="relative">
@@ -213,25 +241,38 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Domaine <span className="text-red-400">*</span>
             </label>
-            <select name="domaine" defaultValue={defaultValues.domaine ?? ""} required className={inputClass}>
+            <select
+              name="domaine"
+              defaultValue={defaultValues.domaine ?? ""}
+              required
+              className={inputClass}
+            >
               <option value="">Sélectionner un domaine</option>
               {Object.entries(DOMAINES).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
+                <option key={k} value={k}>
+                  {v}
+                </option>
               ))}
             </select>
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Lien vidéo YouTube
-              <span className="text-gray-400 font-normal text-xs ml-1">(optionnel)</span>
+              Lien vidéo YouTube{" "}
+              <span className="text-gray-400 font-normal text-xs">(optionnel)</span>
             </label>
             <input
               name="videoUrl"
@@ -244,7 +285,7 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
         </div>
       </div>
 
-      {/* Présentation */}
+      {/* Bio */}
       <div>
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
           Présentation

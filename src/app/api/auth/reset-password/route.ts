@@ -2,6 +2,8 @@ import { db, candidates } from "@/db";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { verifyResetToken } from "@/lib/reset-token";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { logError } from "@/lib/log-error";
 
 export async function POST(req: Request) {
   try {
@@ -14,6 +16,19 @@ export async function POST(req: Request) {
 
     if (newPassword.length < 8) {
       return Response.json({ error: "Mot de passe trop court (min 8 caractères)." }, { status: 400 });
+    }
+
+    // Rate limiting par token (prévenir brute force sur les tokens)
+    const rateLimit = checkRateLimit(`reset-pwd:${token.substring(0, 10)}`, {
+      maxAttempts: 5,
+      windowMs: 15 * 60 * 1000, // 5 tentatives par 15 minutes
+    });
+
+    if (!rateLimit.allowed) {
+      return Response.json(
+        { error: "Trop de tentatives. Réessayez plus tard." },
+        { status: 429 }
+      );
     }
 
     const email = verifyResetToken(token);
@@ -39,7 +54,7 @@ export async function POST(req: Request) {
 
     return Response.json({ success: true });
   } catch (err) {
-    console.error("Reset password error:", err);
+    logError("Reset password", err);
     return Response.json({ error: "Erreur serveur." }, { status: 500 });
   }
 }
