@@ -1,9 +1,13 @@
-import { FedaPay, Transaction } from "fedapay";
+/**
+ * Intégration FedaPay via appel API direct (fetch)
+ * On bypass le SDK Node.js qui ne supporte pas encore
+ * les nouveaux numéros béninois à 10 chiffres (depuis nov 2024)
+ */
 
-export function initFedaPay() {
-  FedaPay.setApiKey(process.env.FEDAPAY_SECRET_KEY!);
-  FedaPay.setEnvironment(process.env.FEDAPAY_MODE === "live" ? "live" : "sandbox");
-}
+const FEDAPAY_API_URL =
+  process.env.FEDAPAY_MODE === "live"
+    ? "https://api.fedapay.com/v1"
+    : "https://sandbox-api.fedapay.com/v1";
 
 export interface CreateTransactionParams {
   nomVotant: string;
@@ -14,55 +18,129 @@ export interface CreateTransactionParams {
   callbackUrl: string;
 }
 
+/**
+ * Convertit un numéro béninois vers le format FedaPay
+ * FedaPay attend le numéro SANS l'indicatif +229 mais AVEC le préfixe 01
+ * Ex: 0144970593 → 0144970593 (garder tel quel, 10 chiffres)
+ * Ex: +22944970593 → 0144970593
+ */
+function formatPhoneForFedaPay(telephone: string): string {
+  let phone = telephone.replace(/\s/g, "").replace(/-/g, "");
+
+  // Supprimer indicatif +229 ou 00229
+  if (phone.startsWith("+229")) {
+    phone = "0" + phone.substring(4); // +22944970593 → 044970593 → on ajoute 01
+  } else if (phone.startsWith("00229")) {
+    phone = "0" + phone.substring(5);
+  }
+
+  // À ce stade, phone doit commencer par 0 et avoir 10 chiffres
+  // Ex: 0144970593
+  return phone;
+}
+
 export async function createFedaPayTransaction(params: CreateTransactionParams) {
-  initFedaPay();
+  const apiKey = process.env.FEDAPAY_SECRET_KEY!;
 
   // Séparer prénom / nom
   const parts = params.nomVotant.trim().split(" ");
   const firstname = parts[0] ?? params.nomVotant;
   const lastname = parts.slice(1).join(" ") || "-";
 
-  // Format FedaPay : numéro LOCAL sans le 0 initial ni l'indicatif +229
-  // Doc officielle : number: '97808080', country: 'BJ'
-  // Anciens numéros (8 chiffres) : 097808080 → 97808080
-  // Nouveaux numéros (10 chiffres depuis 2023) : 0167000000 → 167000000
-  let phone = params.telephone.replace(/\s/g, "").replace(/-/g, "");
-  // Supprimer indicatif si présent
-  if (phone.startsWith("+22901") || phone.startsWith("+229")) {
-    phone = phone.replace(/^\+229/, "");
-  } else if (phone.startsWith("00229")) {
-    phone = phone.replace(/^00229/, "");
-  } else if (phone.startsWith("0")) {
-    // Supprimer le 0 initial : 0167000000 → 167000000
-    phone = phone.substring(1);
+  const phone = formatPhoneForFedaPay(params.telephone);
+
+  console.log("[FedaPay] Téléphone brut:", params.telephone, "→ envoyé:", phone);
+  console.log("[FedaPay] Mode:", process.env.FEDAPAY_MODE, "| URL:", FEDAPAY_API_URL);
+
+  // 1. Créer la transaction
+  const txRes = await fetch(`${FEDAPAY_API_URL}/transactions`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "X-Version": "1.1.1",
+    },
+    body: JSON.stringify({
+      description: `Vote pour ${params.candidatNom} — ${params.nombreVotes} vote(s)`,
+      amount: params.montant,
+      currency: { iso: "XOF" },
+      callback_url: params.callbackUrl,
+      customer: {
+        firstname,
+        lastname,
+        phone_number: {
+          number: phone,
+          country: "BJ",
+        },
+      },
+    }),
+  });
+
+  const txData = await txRes.json();
+
+  console.log("[FedaPay] Réponse création transaction:", JSON.stringify({
+    status: txRes.status,
+    id: txData?.v1?.transaction?.id,
+    reference: txData?.v1?.transaction?.reference,
+    errors: txData?.errors,
+    message: txData?.message,
+  }));
+
+  if (!txRes.ok) {
+    throw {
+      errorMessage: txData?.message ?? "Erreur FedaPay",
+      errors: txData?.errors ?? {},
+    };
   }
 
-  const transaction = await Transaction.create({
-    description: `Vote pour ${params.candidatNom} - ${params.nombreVotes} vote(s)`,
-    amount: params.montant,
-    currency: { iso: "XOF" },
-    callback_url: params.callbackUrl,
-    customer: {
-      firstname,
-      lastname,
-      phone_number: {
-        number: phone,
-        country: "BJ",
-      },
+  const transaction = txData?.v1?.transaction;
+  if (!transaction?.id) {
+    throw new Error("Transaction ID manquant dans la réponse FedaPay");
+  }
+
+  // 2. Générer le token de paiement
+  const tokenRes = await fetch(`${FEDAPAY_API_URL}/transactions/${transaction.id}/token`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "X-Version": "1.1.1",
     },
   });
 
-  const token = await transaction.generateToken();
+  const tokenData = await tokenRes.json();
+
+  console.log("[FedaPay] Réponse token:", JSON.stringify({
+    status: tokenRes.status,
+    token: tokenData?.token ? "présent" : "absent",
+    url: tokenData?.url ?? tokenData?.v1?.token?.url,
+  }));
+
+  if (!tokenRes.ok) {
+    throw new Error(tokenData?.message ?? "Erreur génération token FedaPay");
+  }
+
+  const paymentUrl =
+    tokenData?.url ??
+    tokenData?.v1?.token?.url ??
+    `https://checkout.fedapay.com/${tokenData?.token}`;
 
   return {
     transactionId: String(transaction.id),
     reference: transaction.reference as string,
-    paymentUrl: token.url as string,
+    paymentUrl,
   };
 }
 
 export async function getFedaPayTransaction(transactionId: string) {
-  initFedaPay();
-  const transaction = await Transaction.retrieve(parseInt(transactionId));
-  return transaction;
+  const apiKey = process.env.FEDAPAY_SECRET_KEY!;
+
+  const res = await fetch(`${FEDAPAY_API_URL}/transactions/${transactionId}`, {
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "X-Version": "1.1.1",
+    },
+  });
+
+  return res.json();
 }

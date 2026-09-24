@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, votes } from "@/db";
 import { eq } from "drizzle-orm";
-import { WebhookSignature } from "fedapay";
+import { createHmac } from "crypto";
 import { logError } from "@/lib/log-error";
 
 export const runtime = "nodejs";
+
+function verifyFedaPaySignature(payload: string, signature: string, secret: string): boolean {
+  try {
+    const expected = createHmac("sha256", secret).update(payload).digest("hex");
+    return expected === signature;
+  } catch {
+    return false;
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,7 +24,10 @@ export async function POST(req: NextRequest) {
 
     if (webhookSecret && signature) {
       try {
-        WebhookSignature.verifyHeader(payload, signature, webhookSecret);
+        const valid = verifyFedaPaySignature(payload, signature, webhookSecret);
+        if (!valid) {
+          return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
+        }
       } catch {
         return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
       }
