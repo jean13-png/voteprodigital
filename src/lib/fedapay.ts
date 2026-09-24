@@ -3,6 +3,7 @@ import { FedaPay, Transaction } from "fedapay";
 export function initFedaPay() {
   FedaPay.setApiKey(process.env.FEDAPAY_SECRET_KEY!);
   FedaPay.setEnvironment(process.env.FEDAPAY_MODE === "live" ? "live" : "sandbox");
+  FedaPay.setHttpTimeout(30000); // 30 secondes
 }
 
 export interface CreateTransactionParams {
@@ -22,11 +23,18 @@ export async function createFedaPayTransaction(params: CreateTransactionParams) 
   const firstname = parts[0] ?? params.nomVotant;
   const lastname = parts.slice(1).join(" ") || "-";
 
-  // Convertir téléphone béninois vers format international
-  // Ex: 0167000000 -> +22967000000
-  let phone = params.telephone.replace(/\s/g, "");
-  if (phone.startsWith("0")) {
-    phone = "+229" + phone.substring(1);
+  // Convertir téléphone béninois vers format international E.164
+  // Nouveaux numéros béninois (depuis 2023) : 10 chiffres, ex: 0167000000
+  // Format international : +22901XXXXXXXX (on garde tout sauf le 0 initial)
+  // Ex: 0167000000 → +229167000000 (on remplace le 0 par +229)
+  // Ex: +22967000000 → inchangé
+  let phone = params.telephone.replace(/\s/g, "").replace(/-/g, "");
+  if (phone.startsWith("00229")) {
+    phone = "+" + phone.substring(2); // 00229... → +229...
+  } else if (phone.startsWith("0") && !phone.startsWith("+")) {
+    phone = "+229" + phone.substring(1); // 0167000000 → +229167000000
+  } else if (!phone.startsWith("+")) {
+    phone = "+229" + phone; // 167000000 → +229167000000
   }
 
   const transaction = await Transaction.create({

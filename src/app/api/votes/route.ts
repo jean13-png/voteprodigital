@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
 
     if (!/^0[1-9][0-9]{8}$/.test(normalizedTelephone)) {
       return NextResponse.json(
-        { error: "Format de téléphone invalide." },
+        { error: "Format de téléphone invalide. Ex: 0167000000" },
         { status: 400 }
       );
     }
