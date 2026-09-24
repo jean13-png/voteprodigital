@@ -5,7 +5,6 @@ import { logError } from "@/lib/log-error";
 import { VOTE_PRICE } from "@/lib/constants";
 import { createFedaPayTransaction } from "@/lib/fedapay";
 import { buildVoteRequestKey, claimIdempotentRequest } from "@/lib/idempotency";
-import { sendNewVoteNotification, sendVoteReceipt } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -148,32 +147,9 @@ export async function POST(req: NextRequest) {
       })
       .where(eq(votes.id, vote.id));
 
-    // Notifier l'admin (non bloquant)
-    sendNewVoteNotification({
-      id: vote.id,
-      nomVotant: vote.nomVotant,
-      telephone: vote.telephone,
-      nombreVotes: vote.nombreVotes,
-      montant: vote.montant,
-      candidatNom: candidat.nom,
-      preuve: vote.preuve,
-    }).catch((err) => logError("sendNewVoteNotification", err));
-
-    // Envoyer le récépissé au votant (non bloquant)
-    if (vote.email) {
-      sendVoteReceipt({
-        id: vote.id,
-        nomVotant: vote.nomVotant,
-        telephone: vote.telephone,
-        email: vote.email,
-        nombreVotes: vote.nombreVotes,
-        montant: vote.montant,
-        candidatNom: candidat.nom,
-        statut: vote.statut,
-        createdAt: vote.createdAt,
-        fedapayReference: vote.fedapayReference,
-      }).catch((err) => logError("sendVoteReceipt", err));
-    }
+    // ⚠️ Les emails sont envoyés UNIQUEMENT après confirmation du paiement
+    // via le webhook FedaPay (/api/webhook/fedapay), pas ici.
+    // Raison : l'utilisateur peut annuler ou ne pas payer.
 
     return NextResponse.json(
       { success: true, voteId: vote.id, paymentUrl: fedapay.paymentUrl },

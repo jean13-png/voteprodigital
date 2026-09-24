@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, votes } from "@/db";
+import { db, votes, candidates } from "@/db";
 import { eq } from "drizzle-orm";
 import { createHmac } from "crypto";
 import { logError } from "@/lib/log-error";
+import { sendNewVoteNotification, sendVoteReceipt } from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -68,6 +69,42 @@ export async function POST(req: NextRequest) {
             commentaireAdmin: "Validé automatiquement via FedaPay",
           })
           .where(eq(votes.id, vote.id));
+
+        // Récupérer le candidat pour les emails
+        const candidatRes = await db
+          .select()
+          .from(candidates)
+          .where(eq(candidates.id, vote.candidateId));
+        const candidat = candidatRes[0];
+
+        if (candidat) {
+          // Notifier l'admin que le paiement est confirmé
+          sendNewVoteNotification({
+            id: vote.id,
+            nomVotant: vote.nomVotant,
+            telephone: vote.telephone,
+            nombreVotes: vote.nombreVotes,
+            montant: vote.montant,
+            candidatNom: candidat.nom,
+            preuve: vote.preuve,
+          }).catch((err) => logError("sendNewVoteNotification", err));
+
+          // Envoyer le récépissé au votant
+          if (vote.email) {
+            sendVoteReceipt({
+              id: vote.id,
+              nomVotant: vote.nomVotant,
+              telephone: vote.telephone,
+              email: vote.email,
+              nombreVotes: vote.nombreVotes,
+              montant: vote.montant,
+              candidatNom: candidat.nom,
+              statut: "valide",
+              createdAt: vote.createdAt,
+              fedapayReference: vote.fedapayReference,
+            }).catch((err) => logError("sendVoteReceipt", err));
+          }
+        }
       } else if (
         event === "transaction.declined" ||
         event === "transaction.canceled"
