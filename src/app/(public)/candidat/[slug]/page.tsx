@@ -22,9 +22,38 @@ export async function generateMetadata({
   const { slug } = await params;
   const candidat = await getCandidateBySlug(slug);
   if (!candidat) return {};
+
+  const BASE_URL = process.env.NEXTAUTH_URL ?? "https://voteprodigital.vercel.app";
+  const title = `${candidat.nom} — Votez pour moi ! 🗳️`;
+  const description = `Soutenez ${candidat.nom} en ${DOMAINES[candidat.domaine]} au Bootcamp Digital Academy 2026. ${Number(candidat.totalVotes)} votes reçus. Chaque vote compte !`;
+  // On utilise la photo du candidat si disponible, sinon le logo de la plateforme
+  const image = candidat.photo ?? `${BASE_URL}/images/logo.jpeg`;
+
   return {
-    title: `${candidat.nom} — Vote ProDigital Center`,
-    description: `Votez pour ${candidat.nom}, candidat en ${DOMAINES[candidat.domaine]} au Bootcamp Digital Academy 2026.`,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${BASE_URL}/candidat/${slug}`,
+      siteName: "ProDigital Center",
+      type: "profile",
+      locale: "fr_FR",
+      images: [
+        {
+          url: image,
+          width: 1200,
+          height: 630,
+          alt: `${candidat.nom} — Bootcamp Digital Academy 2026`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+    },
   };
 }
 

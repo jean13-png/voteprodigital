@@ -6,9 +6,40 @@ import DomaineBadge from "@/components/ui/DomaineBadge";
 import VoteForm from "./VoteForm";
 import { ArrowLeft } from "lucide-react";
 
-export const metadata = {
-  title: "Voter — ProDigital Center",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const candidat = await getCandidateBySlug(slug);
+  if (!candidat) return { title: "Voter — ProDigital Center" };
+
+  const BASE_URL = process.env.NEXTAUTH_URL ?? "https://voteprodigital.vercel.app";
+  const title = `Voter pour ${candidat.nom} — ProDigital Center 🗳️`;
+  const description = `Soutenez ${candidat.nom} en votant maintenant ! 1 vote = ${VOTE_PRICE} FCFA. Bootcamp Digital Academy 2026.`;
+  const image = candidat.photo ?? `${BASE_URL}/images/logo.jpeg`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${BASE_URL}/voter/${slug}`,
+      siteName: "ProDigital Center",
+      type: "website",
+      locale: "fr_FR",
+      images: [{ url: image, width: 1200, height: 630, alt: candidat.nom }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [image],
+    },
+  };
+}
 
 export default async function VoterPage({
   params,
