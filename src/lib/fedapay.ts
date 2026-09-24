@@ -78,14 +78,6 @@ export async function createFedaPayTransaction(params: CreateTransactionParams) 
 
   const txData = await txRes.json();
 
-  console.log("[FedaPay] Réponse création transaction:", JSON.stringify({
-    status: txRes.status,
-    id: txData?.v1?.transaction?.id,
-    reference: txData?.v1?.transaction?.reference,
-    errors: txData?.errors,
-    message: txData?.message,
-  }));
-
   if (!txRes.ok) {
     throw {
       errorMessage: txData?.message ?? "Erreur FedaPay",
@@ -93,37 +85,19 @@ export async function createFedaPayTransaction(params: CreateTransactionParams) 
     };
   }
 
-  const transaction = txData?.v1?.transaction;
+  // La clé de réponse FedaPay est "v1/transaction" (avec slash)
+  const transaction = txData?.["v1/transaction"];
+
   if (!transaction?.id) {
-    throw new Error("Transaction ID manquant dans la réponse FedaPay");
+    throw new Error(`Transaction ID manquant. Réponse: ${JSON.stringify(txData)}`);
   }
 
-  // 2. Générer le token de paiement
-  const tokenRes = await fetch(`${FEDAPAY_API_URL}/transactions/${transaction.id}/token`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "X-Version": "1.1.1",
-    },
-  });
+  // payment_url et payment_token sont directement dans la réponse — pas besoin d'un 2e appel
+  const paymentUrl = transaction.payment_url;
 
-  const tokenData = await tokenRes.json();
-
-  console.log("[FedaPay] Réponse token:", JSON.stringify({
-    status: tokenRes.status,
-    token: tokenData?.token ? "présent" : "absent",
-    url: tokenData?.url ?? tokenData?.v1?.token?.url,
-  }));
-
-  if (!tokenRes.ok) {
-    throw new Error(tokenData?.message ?? "Erreur génération token FedaPay");
+  if (!paymentUrl) {
+    throw new Error("payment_url manquant dans la réponse FedaPay");
   }
-
-  const paymentUrl =
-    tokenData?.url ??
-    tokenData?.v1?.token?.url ??
-    `https://checkout.fedapay.com/${tokenData?.token}`;
 
   return {
     transactionId: String(transaction.id),
