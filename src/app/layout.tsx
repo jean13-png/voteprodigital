@@ -1,13 +1,6 @@
 import type { Metadata } from "next";
-import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
-
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  variable: "--font-montserrat",
-  weight: ["400", "500", "600", "700", "800"],
-});
 
 export const metadata: Metadata = {
   title: "Vote ProDigital — Bootcamp Digital Academy",
@@ -27,8 +20,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fr" className={`${montserrat.variable}`}>
-      <body className="min-h-screen bg-white font-[family-name:var(--font-montserrat)] antialiased">
+    <html lang="fr">
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+        />
+      </head>
+      <body className="min-h-screen bg-white antialiased">
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
