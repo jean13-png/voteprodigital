@@ -47,6 +47,65 @@ export async function getCandidatesRanked(limit?: number) {
   return await query;
 }
 
+// ─── Candidats paginés + recherche (page d'accueil) ──────────────────────────
+
+export async function getCandidatesRankedPaginated(options: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}) {
+  const { page = 1, limit = 8, search = "" } = options;
+  const offset = (page - 1) * limit;
+
+  const searchCondition = search
+    ? and(
+        eq(candidates.actif, true),
+        or(
+          ilike(candidates.nom, `%${search}%`),
+          ilike(candidates.domaine, `%${search}%`)
+        )
+      )
+    : eq(candidates.actif, true);
+
+  const [rows, countRes] = await Promise.all([
+    db
+      .select({
+        id: candidates.id,
+        slug: candidates.slug,
+        nom: candidates.nom,
+        photo: candidates.photo,
+        photoAffiche: candidates.photoAffiche,
+        bio: candidates.bio,
+        domaine: candidates.domaine,
+        videoUrl: candidates.videoUrl,
+        actif: candidates.actif,
+        totalVotes: sql<number>`COALESCE(SUM(CASE WHEN ${votes.statut} = 'valide' THEN ${votes.nombreVotes} ELSE 0 END), 0)`.as("total_votes"),
+      })
+      .from(candidates)
+      .leftJoin(votes, eq(votes.candidateId, candidates.id))
+      .where(searchCondition)
+      .groupBy(candidates.id)
+      .orderBy(desc(sql`COALESCE(SUM(CASE WHEN ${votes.statut} = 'valide' THEN ${votes.nombreVotes} ELSE 0 END), 0)`))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ count: sql<number>`COUNT(DISTINCT ${candidates.id})` })
+      .from(candidates)
+      .where(searchCondition),
+  ]);
+
+  const total = Number(countRes[0]?.count ?? 0);
+
+  return {
+    candidats: rows,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+    hasNext: page * limit < total,
+    hasPrev: page > 1,
+  };
+}
+
 // ─── Un candidat par slug ─────────────────────────────────────────────────────
 
 export async function getCandidateBySlug(slug: string) {

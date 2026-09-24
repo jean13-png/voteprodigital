@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { getCandidatesRanked, getCandidatesCount } from "@/lib/db-queries";
-import CandidatCard from "@/components/public/CandidatCard";
+import { getCandidatesCount, getCandidatesRankedPaginated } from "@/lib/db-queries";
+import CandidatsSection from "@/components/public/CandidatsSection";
 import Countdown from "@/components/public/Countdown";
 import { SOUTENANCE_DATE_FORMATTED } from "@/lib/constants";
 import { ArrowRight } from "lucide-react";
@@ -9,8 +9,10 @@ import { ArrowRight } from "lucide-react";
 export const revalidate = 60;
 
 export default async function HomePage() {
-  const topCandidats = await getCandidatesRanked(8);
-  const candidatCount = await getCandidatesCount();
+  const [candidatCount, initialData] = await Promise.all([
+    getCandidatesCount(),
+    getCandidatesRankedPaginated({ page: 1, limit: 8, search: "" }),
+  ]);
 
   return (
     <>
@@ -87,45 +89,16 @@ export default async function HomePage() {
                 Top candidats
               </h2>
             </div>
-            <Link
-              href="/candidats"
-              className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-[#1B2A6B] hover:text-[#F5A623] transition-colors"
-            >
-              Voir les {candidatCount} <ArrowRight className="w-4 h-4" />
-            </Link>
           </div>
 
-          {topCandidats.length === 0 ? (
-            <div className="border border-dashed border-gray-200 py-20 text-center">
-              <p className="text-gray-400 text-sm">
-                Les candidats seront bientôt disponibles.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {topCandidats.map((candidat, index) => (
-                <CandidatCard
-                  key={candidat.id}
-                  rank={index + 1}
-                  slug={candidat.slug}
-                  nom={candidat.nom}
-                  photo={candidat.photo}
-                  photoAffiche={candidat.photoAffiche}
-                  domaine={candidat.domaine}
-                  totalVotes={Number(candidat.totalVotes)}
-                />
-              ))}
-            </div>
-          )}
+          <CandidatsSection
+            initialCandidats={initialData.candidats}
+            initialTotal={initialData.total}
+            initialTotalPages={initialData.totalPages}
+            initialPage={initialData.page}
+            initialSearch=""
+          />
 
-          <div className="mt-8 text-center sm:hidden">
-            <Link
-              href="/candidats"
-              className="text-sm font-semibold text-[#1B2A6B] underline underline-offset-4"
-            >
-              Voir tous les {candidatCount} candidats
-            </Link>
-          </div>
         </div>
       </section>
 
