@@ -1,12 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getSessionFromRequest as getSession } from "@/lib/session";
-import {
-  CSRF_COOKIE,
-  CSRF_HEADER,
-  generateCsrfToken,
-  verifyCsrf,
-} from "@/lib/csrf";
+import { auth } from "@/lib/auth";
 
 const MUTATING_METHODS = ["POST", "PUT", "PATCH", "DELETE"];
 
@@ -20,17 +14,10 @@ const rateStore = new Map<string, RateLimitEntry>();
 const RATE_LIMITS: Record<string, { max: number; windowMs: number }> = {
   "/api/votes": { max: 5, windowMs: 10 * 60 * 1000 },
   "/api/auth": { max: 30, windowMs: 15 * 60 * 1000 },
-  "/api/admin": { max: 30, windowMs: 10 * 60 * 1000 },
 };
 
-// Routes de lecture (GET) qui ne modifient rien : on ne les rate-limit pas,
-// car NextAuth les appelle à chaque navigation (session, csrf-token).
-const READ_ONLY_PREFIXES = ["/api/auth/session", "/api/auth/csrf-token"];
-
 function checkRateLimit(ip: string, path: string, method: string): NextResponse | null {
-  if (method === "GET" && READ_ONLY_PREFIXES.some((p) => path.startsWith(p))) {
-    return null;
-  }
+  if (method === "GET") return null;
 
   for (const [prefix, { max, windowMs }] of Object.entries(RATE_LIMITS)) {
     if (!path.startsWith(prefix)) continue;
@@ -57,16 +44,7 @@ function checkRateLimit(ip: string, path: string, method: string): NextResponse 
 }
 
 export default async function middleware(req: NextRequest) {
-  try {
-    return await handleMiddleware(req);
-  } catch {
-    return NextResponse.next();
-  }
-}
-
-async function handleMiddleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const session = await getSession(req);
 
   if (process.env.NODE_ENV === "production") {
     const url = req.nextUrl.clone();
@@ -84,84 +62,30 @@ async function handleMiddleware(req: NextRequest) {
   const rateLimitResponse = checkRateLimit(clientIP, pathname, req.method);
   if (rateLimitResponse) return rateLimitResponse;
 
-  // ─── Protection espace admin ──────────────────────────────────────
-  if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
-    if (!session || session.user?.role !== "admin") {
+  // ─── Protection espace admin ─────────────────────────────────────
+  // /admin/login reste public ; le reste de /admin exige une session admin.
+  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "admin") {
       return NextResponse.redirect(new URL("/admin/login", req.url));
     }
   }
 
-  // ─── Protection espace candidat ───────────────────────────────────
+  // ─── Protection espace candidat ────────────────────────────────────
+  if (pathname.startsWith("/candidat/login")) {
+    return NextResponse.next();
+  }
   if (
     pathname.startsWith("/candidat/dashboard") ||
     pathname.startsWith("/candidat/profil")
   ) {
-    if (!session || session.user?.role !== "candidate") {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "candidate") {
       return NextResponse.redirect(new URL("/candidat/login", req.url));
     }
   }
 
-  // ─── Redirection si déjà connecté ────────────────────────────────
-  if (pathname === "/admin/login" && session?.user?.role === "admin") {
-    return NextResponse.redirect(new URL("/admin/dashboard", req.url));
-  }
-
-  if (pathname === "/candidat/login" && session?.user?.role === "candidate") {
-    return NextResponse.redirect(new URL("/candidat/dashboard", req.url));
-  }
-
-  // ─── CSRF : définir le cookie si absent ──────────────────────────
-  const existingCookie = req.cookies.get(CSRF_COOKIE)?.value;
-  const response = NextResponse.next();
-  if (!existingCookie) {
-    response.cookies.set(CSRF_COOKIE, generateCsrfToken(), {
-      httpOnly: false,
-      sameSite: "lax",
-      path: "/",
-      secure: process.env.NODE_ENV === "production",
-    });
-  }
-
-  // ─── CSRF : vérifier sur les mutations ──────────────────────────
-  if (MUTATING_METHODS.includes(req.method)) {
-    if (
-      !pathname.startsWith("/api/auth") &&
-      !pathname.startsWith("/api/webhook")
-    ) {
-      // Les Server Actions Next.js (header "Next-Action" présent) sont
-      // protégées par le framework (même origine + body signé) : on les
-      // exclut de la vérification CSRF manuelle.
-      const isServerAction = !!req.headers.get("next-action");
-      if (!isServerAction) {
-        const cookieToken = req.cookies.get(CSRF_COOKIE)?.value;
-        const headerToken = req.headers.get(CSRF_HEADER);
-        if (!verifyCsrf(headerToken, cookieToken)) {
-          return NextResponse.json(
-            { error: "Token CSRF invalide ou absent." },
-            { status: 403 }
-          );
-        }
-      }
-    }
-  }
-
-  // ─── Security headers (production) ──────────────────────────
-  if (process.env.NODE_ENV === "production") {
-    response.headers.set(
-      "Strict-Transport-Security",
-      "max-age=31536000; includeSubDomains"
-    );
-    response.headers.set(
-      "X-Content-Type-Options",
-      "nosniff"
-    );
-    response.headers.set(
-      "X-Frame-Options",
-      "DENY"
-    );
-  }
-
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {

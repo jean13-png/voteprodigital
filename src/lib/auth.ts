@@ -4,34 +4,26 @@ import { db } from "@/db";
 import { users, candidates } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { generateCsrfToken } from "@/lib/csrf";
 
-function getRuntimeBaseUrl() {
-  const configuredUrl =
-    process.env.AUTH_URL ??
-    process.env.NEXTAUTH_URL ??
-    process.env.VERCEL_URL ??
-    "http://localhost:3000";
+const runtimeBaseUrl =
+  process.env.AUTH_URL ??
+  process.env.NEXTAUTH_URL ??
+  process.env.VERCEL_URL ??
+  "http://localhost:3000";
 
-  const trimmed = configuredUrl.trim();
-
-  if (!trimmed) return "http://localhost:3000";
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-
-  return `https://${trimmed}`;
-}
-
-const runtimeBaseUrl = getRuntimeBaseUrl();
-if (!process.env.AUTH_URL) process.env.AUTH_URL = runtimeBaseUrl;
-if (!process.env.NEXTAUTH_URL) process.env.NEXTAUTH_URL = runtimeBaseUrl;
+const trimmed = runtimeBaseUrl.trim();
+const baseUrl = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+if (!process.env.AUTH_URL) process.env.AUTH_URL = baseUrl;
+if (!process.env.NEXTAUTH_URL) process.env.NEXTAUTH_URL = baseUrl;
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV !== "production",
   trustHost: true,
+  basePath: "/api/auth",
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
-    updateAge: 24 * 60 * 60,
   },
   cookies: {
     sessionToken: {
@@ -41,150 +33,155 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         sameSite: "lax",
         path: "/",
         secure: process.env.NODE_ENV === "production",
-        domain: undefined,
       },
     },
   },
   pages: {
     signIn: "/admin/login",
   },
-  basePath: "/api/auth",
   providers: [
-    // ─── Provider Admin ───────────────────────────────────────────────────────
+    // Backwards-compatible credentials provider: some client flows post to
+    // `/api/auth/callback/credentials`. Provide a catch-all `credentials`
+    // provider that will authenticate either an admin (users) or a
+    // candidate (candidates) by email/password.
+    Credentials({
+      id: "credentials",
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email" },
+        password: { label: "Mot de passe", type: "password" },
+      },
+      async authorize(credentials) {
+          const email = credentials?.email as string | undefined;
+          const password = credentials?.password as string | undefined;
+          if (process.env.NODE_ENV !== "production") {
+            console.log("[NextAuth][credentials] authorize start", { email: email ?? null });
+          }
+          if (!email || !password) {
+            if (process.env.NODE_ENV !== "production") console.log("[NextAuth][credentials] missing email or password");
+            return null;
+          }
+
+        // Try admin user first
+        try {
+          const u = await db.select().from(users).where(eq(users.email, email)).limit(1);
+          const user = u[0];
+          if (process.env.NODE_ENV !== "production") console.log("[NextAuth][credentials] admin lookup result", { user: user ?? null });
+          if (user) {
+            const ok = await bcrypt.compare(password, user.password);
+            if (process.env.NODE_ENV !== "production") console.log("[NextAuth][credentials] admin bcrypt.compare result", { ok });
+            if (ok) return { id: String(user.id), email: user.email, role: "admin" };
+          }
+        } catch (e) {
+          console.error("[NextAuth] credentials.authorize user lookup error", e);
+        }
+
+        // Fallback to candidate
+        try {
+          const c = await db.select().from(candidates).where(eq(candidates.email, email)).limit(1);
+          const candidate = c[0];
+          if (process.env.NODE_ENV !== "production") console.log("[NextAuth][credentials] candidate lookup result", { candidate: candidate ?? null });
+          if (candidate && candidate.password) {
+            const ok = await bcrypt.compare(password, candidate.password);
+            if (process.env.NODE_ENV !== "production") console.log("[NextAuth][credentials] candidate bcrypt.compare result", { ok });
+            if (ok) return { id: String(candidate.id), email: candidate.email, role: "candidate" };
+          }
+        } catch (e) {
+          console.error("[NextAuth] credentials.authorize candidate lookup error", e);
+        }
+
+        return null;
+      },
+    }),
     Credentials({
       id: "admin",
       name: "Admin",
       credentials: {
-        email: { label: "Email", type: "email" },
+        email: { label: "Email" },
         password: { label: "Mot de passe", type: "password" },
       },
       async authorize(credentials) {
-        const start = Date.now();
-        console.log('[NextAuth] admin.authorize start', { email: credentials?.email });
-        try {
-          if (!credentials?.email || !credentials?.password) {
-            console.log('[NextAuth] admin.authorize missing credentials', { duration: Date.now() - start });
-            return null;
-          }
+        const email = credentials?.email as string | undefined;
+        const password = credentials?.password as string | undefined;
+        if (!email || !password) return null;
 
-          const dbStart = Date.now();
+        try {
           const result = await db
             .select()
             .from(users)
-            .where(eq(users.email, credentials.email as string));
-          console.log('[NextAuth] admin.authorize dbQuery done', { duration: Date.now() - dbStart });
+            .where(eq(users.email, email))
+            .limit(1);
 
           const user = result[0];
-          if (!user) {
-            console.log('[NextAuth] admin.authorize user not found', { email: credentials?.email, duration: Date.now() - start });
-            return null;
-          }
+          if (!user) return null;
 
-          const bcryptStart = Date.now();
-          const passwordMatch = await bcrypt.compare(
-            credentials.password as string,
-            user.password
-          );
-          console.log('[NextAuth] admin.authorize bcrypt done', { duration: Date.now() - bcryptStart });
+          const passwordValid = await bcrypt.compare(password, user.password);
+          if (!passwordValid) return null;
 
-          if (!passwordMatch) {
-            console.log('[NextAuth] admin.authorize password mismatch', { email: credentials?.email, duration: Date.now() - start });
-            return null;
-          }
-
-          console.log('[NextAuth] admin.authorize success', { email: credentials?.email, duration: Date.now() - start });
           return {
             id: String(user.id),
-            name: user.name,
             email: user.email,
             role: "admin",
           };
         } catch (err) {
-          console.error('[NextAuth] admin.authorize error', err, { duration: Date.now() - start });
-          throw err;
+          console.error("[NextAuth] admin.authorize error:", err);
+          return null;
         }
       },
     }),
-
-    // ─── Provider Candidat ────────────────────────────────────────────────────
     Credentials({
       id: "candidate",
-      name: "Candidat",
+      name: "Candidate",
       credentials: {
-        email: { label: "Email", type: "email" },
+        email: { label: "Email" },
         password: { label: "Mot de passe", type: "password" },
       },
       async authorize(credentials) {
-        const start = Date.now();
-        console.log('[NextAuth] candidate.authorize start', { email: credentials?.email });
-        try {
-          if (!credentials?.email || !credentials?.password) {
-            console.log('[NextAuth] candidate.authorize missing credentials', { duration: Date.now() - start });
-            return null;
-          }
+        const email = credentials?.email as string | undefined;
+        const password = credentials?.password as string | undefined;
+        if (!email || !password) return null;
 
-          const dbStart = Date.now();
-          const result = await db
-            .select()
-            .from(candidates)
-            .where(eq(candidates.email, credentials.email as string));
-          console.log('[NextAuth] candidate.authorize dbQuery done', { duration: Date.now() - dbStart });
+        const result = await db
+          .select()
+          .from(candidates)
+          .where(eq(candidates.email, email))
+          .limit(1);
 
-          const candidate = result[0];
-          if (!candidate || !candidate.actif) {
-            console.log('[NextAuth] candidate.authorize not found or inactive', { email: credentials?.email, duration: Date.now() - start });
-            return null;
-          }
+        const candidate = result[0];
+        if (!candidate || !candidate.password) return null;
 
-          const bcryptStart = Date.now();
-          const passwordMatch = await bcrypt.compare(
-            credentials.password as string,
-            candidate.password
-          );
-          console.log('[NextAuth] candidate.authorize bcrypt done', { duration: Date.now() - bcryptStart });
+        const passwordValid = await bcrypt.compare(password, candidate.password);
+        if (!passwordValid) return null;
 
-          if (!passwordMatch) {
-            console.log('[NextAuth] candidate.authorize password mismatch', { email: credentials?.email, duration: Date.now() - start });
-            return null;
-          }
-
-          console.log('[NextAuth] candidate.authorize success', { email: credentials?.email, duration: Date.now() - start });
-          return {
-            id: String(candidate.id),
-            name: candidate.nom,
-            email: candidate.email,
-            role: "candidate",
-            slug: candidate.slug,
-          };
-        } catch (err) {
-          console.error('[NextAuth] candidate.authorize error', err, { duration: Date.now() - start });
-          throw err;
-        }
+        return {
+          id: String(candidate.id),
+          email: candidate.email,
+          role: "candidate",
+        };
       },
     }),
   ],
 
   callbacks: {
     async jwt({ token, user }) {
-      console.log('[NextAuth] jwt callback', { user: user ? (user as any).email : undefined, token });
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[NextAuth] jwt callback", { token, user });
+      }
       if (user) {
         token.role = (user as { role?: string }).role;
-        token.slug = (user as { slug?: string }).slug;
-        token.id = user.id;
-        token.csrfToken = generateCsrfToken();
+        token.id = user.id as string;
+        token.email = user.email as string;
       }
       return token;
     },
     async session({ session, token }) {
-      console.log('[NextAuth] session callback', { sessionUser: session.user?.email, token });
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[NextAuth] session callback", { session, token });
+      }
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
-        session.user.slug = token.slug as string | undefined;
       }
-
-      // @ts-ignore — csrfToken stocké dans le JWT, pas dans le type Session par défaut
-      session.csrfToken = token.csrfToken;
       return session;
     },
   },

@@ -5,6 +5,7 @@ import { logError } from "@/lib/log-error";
 import { VOTE_PRICE } from "@/lib/constants";
 import { createFedaPayTransaction } from "@/lib/fedapay";
 import { buildVoteRequestKey, claimIdempotentRequest } from "@/lib/idempotency";
+import { sendNewVoteNotification, sendVoteReceipt } from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,13 +18,22 @@ export async function POST(req: NextRequest) {
 
     // Paiement automatique FedaPay (JSON)
     const body = await req.json();
-    const { candidatId, nomVotant, telephone, nombreVotes } = body;
+    const { candidatId, nomVotant, telephone, email, nombreVotes } = body;
 
     if (!candidatId || !nomVotant || !telephone || !nombreVotes) {
       return NextResponse.json(
         { error: "Tous les champs sont requis." },
         { status: 400 }
       );
+    }
+
+    if (email !== undefined && email !== null && email !== "") {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim())) {
+        return NextResponse.json(
+          { error: "Format d'email invalide." },
+          { status: 400 }
+        );
+      }
     }
 
     const normalizedCandidatId = Number(candidatId);
@@ -107,6 +117,7 @@ export async function POST(req: NextRequest) {
         candidateId: normalizedCandidatId,
         nomVotant: normalizedNom,
         telephone: normalizedTelephone,
+        email: email ? String(email).trim() : null,
         nombreVotes: normalizedNombreVotes,
         montant,
         statut: "en_attente",
@@ -136,6 +147,33 @@ export async function POST(req: NextRequest) {
         fedapayReference: fedapay.reference,
       })
       .where(eq(votes.id, vote.id));
+
+    // Notifier l'admin (non bloquant)
+    sendNewVoteNotification({
+      id: vote.id,
+      nomVotant: vote.nomVotant,
+      telephone: vote.telephone,
+      nombreVotes: vote.nombreVotes,
+      montant: vote.montant,
+      candidatNom: candidat.nom,
+      preuve: vote.preuve,
+    }).catch((err) => logError("sendNewVoteNotification", err));
+
+    // Envoyer le récépissé au votant (non bloquant)
+    if (vote.email) {
+      sendVoteReceipt({
+        id: vote.id,
+        nomVotant: vote.nomVotant,
+        telephone: vote.telephone,
+        email: vote.email,
+        nombreVotes: vote.nombreVotes,
+        montant: vote.montant,
+        candidatNom: candidat.nom,
+        statut: vote.statut,
+        createdAt: vote.createdAt,
+        fedapayReference: vote.fedapayReference,
+      }).catch((err) => logError("sendVoteReceipt", err));
+    }
 
     return NextResponse.json(
       { success: true, voteId: vote.id, paymentUrl: fedapay.paymentUrl },

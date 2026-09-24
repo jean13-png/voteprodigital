@@ -11,6 +11,7 @@ export const DOMAINES: Record<string, string> = {
   developpement_web: "Développement Web",
   ecommerce: "E-Commerce",
   audiovisuel: "Audiovisuel",
+  tout: "Tout",
 };
 
 function formatSoutenanceDate(date: Date): string {

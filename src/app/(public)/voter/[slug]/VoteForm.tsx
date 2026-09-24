@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 // import { useRef } from "react"; // MODE MANUEL DÉSACTIVÉ
 // import { Upload, X, ImageIcon } from "lucide-react"; // MODE MANUEL DÉSACTIVÉ
-import { Loader2, Phone, User, Hash } from "lucide-react";
+import { Loader2, Mail, Phone, User, Hash } from "lucide-react";
 import { VOTE_PRICE } from "@/lib/constants";
 import { swalError, swalToast } from "@/lib/swal";
 import { csrfFetch } from "@/lib/csrf";
@@ -30,13 +30,18 @@ export default function VoteForm({ candidatId, candidatSlug }: VoteFormProps) {
   // function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) { ... }
   // function removeFile() { ... }
 
-  function validate(data: { nomVotant: string; telephone: string; nombreVotes: number | "" }) {
+  function validate(data: { nomVotant: string; telephone: string; email: string; nombreVotes: number | "" }) {
     const errs: Record<string, string> = {};
     if (!data.nomVotant.trim()) errs.nomVotant = "Votre nom est requis.";
     if (!data.telephone.trim()) {
       errs.telephone = "Le numéro de téléphone est requis.";
     } else if (!/^0[1-9][0-9]{8}$/.test(data.telephone.trim())) {
       errs.telephone = "Numéro invalide (10 chiffres, ex: 0167000000).";
+    }
+    if (!data.email.trim()) {
+      errs.email = "L'adresse email est requise.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) {
+      errs.email = "Format d'email invalide.";
     }
     if (data.nombreVotes === "" || data.nombreVotes === null || data.nombreVotes === undefined) {
       errs.nombreVotes = "Veuillez entrer un nombre de votes.";
@@ -54,8 +59,9 @@ export default function VoteForm({ candidatId, candidatSlug }: VoteFormProps) {
     const form = e.currentTarget;
     const nomVotant = (form.elements.namedItem("nomVotant") as HTMLInputElement).value;
     const telephone = (form.elements.namedItem("telephone") as HTMLInputElement).value;
+    const email = (form.elements.namedItem("email") as HTMLInputElement).value;
 
-    const errs = validate({ nomVotant, telephone, nombreVotes });
+    const errs = validate({ nomVotant, telephone, email, nombreVotes });
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
@@ -69,6 +75,7 @@ export default function VoteForm({ candidatId, candidatSlug }: VoteFormProps) {
           candidatId,
           nomVotant: nomVotant.trim(),
           telephone: telephone.trim(),
+          email: email.trim(),
           nombreVotes,
         }),
       });
@@ -132,6 +139,23 @@ export default function VoteForm({ candidatId, candidatSlug }: VoteFormProps) {
           />
         </div>
         {errors.telephone && <p className="mt-1 text-xs text-red-600">{errors.telephone}</p>}
+      </div>
+
+      {/* Email */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          Adresse email <span className="text-gray-400 font-normal">(récépissé)</span>
+        </label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            name="email"
+            type="email"
+            placeholder="Ex: jean.dupont@email.com"
+            className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A6B]/20 focus:border-[#1B2A6B] transition-colors ${errors.email ? "border-red-300" : "border-gray-200"}`}
+          />
+        </div>
+        {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
       </div>
 
       {/* Nombre de votes */}

@@ -1,5 +1,5 @@
-export const CSRF_COOKIE = "x-csrf-token";
-export const CSRF_HEADER = "X-CSRF-Token";
+export const CSRF_COOKIE = "x-app-csrf-token";
+export const CSRF_HEADER = "X-App-CSRF-Token";
 
 export function generateCsrfToken(): string {
   const array = new Uint8Array(32);
@@ -39,5 +39,5 @@ export async function csrfFetch(
   if (token) {
     headers.set(CSRF_HEADER, token);
   }
-  return fetch(url, { ...options, headers });
+  return fetch(url, { ...options, headers, credentials: "include" });
 }

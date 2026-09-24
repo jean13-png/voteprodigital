@@ -25,10 +25,6 @@ export default function AdminLoginPage() {
       return;
     }
 
-    // Connexion réussie : on force un rechargement complet de la page.
-    // Le cookie JWT est défini par NextAuth dans la réponse de la Server Action ;
-    // un rechargement complet (et non une navigation client) garantit que le
-    // middleware lit le cookie à partir de la nouvelle requête serveur.
     window.location.assign("/admin/dashboard");
   }
 

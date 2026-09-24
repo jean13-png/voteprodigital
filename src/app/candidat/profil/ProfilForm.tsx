@@ -8,7 +8,7 @@ import { csrfFetch } from "@/lib/csrf";
 
 interface Props {
   candidatId: number;
-  defaultValues: { nom: string; email: string; bio: string };
+  defaultValues: { nom: string; email?: string | null; bio: string };
 }
 
 export default function ProfilForm({ candidatId, defaultValues }: Props) {
@@ -68,7 +68,7 @@ export default function ProfilForm({ candidatId, defaultValues }: Props) {
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
-        <input name="email" type="email" defaultValue={defaultValues.email} required className={inputClass} />
+        <input name="email" type="email" defaultValue={defaultValues.email ?? ""} className={inputClass} />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">Présentation / Bio</label>

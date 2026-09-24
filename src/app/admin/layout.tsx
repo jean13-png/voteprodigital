@@ -1,15 +1,16 @@
-import { getSession } from "@/lib/session";
 import AdminShell from "@/components/admin/AdminShell";
+import { auth } from "@/lib/auth";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getSession();
+  // Le shell (sidebar) n'est affiché que lorsqu'un administrateur est
+  // authentifié. La page /admin/login reste plein écran sans navigation.
+  const session = await auth();
   const isAdmin = session?.user?.role === "admin";
 
-  // Page login : pas de sidebar, juste le contenu centré
   if (!isAdmin) {
     return <>{children}</>;
   }

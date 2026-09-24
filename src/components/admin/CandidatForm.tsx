@@ -4,7 +4,6 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Upload, X, Eye, EyeOff, User } from "lucide-react";
 import { DOMAINES } from "@/lib/constants";
-import Image from "next/image";
 import { swalError, swalSuccess } from "@/lib/swal";
 import { csrfFetch } from "@/lib/csrf";
 
@@ -13,12 +12,12 @@ interface CandidatFormProps {
   defaultValues?: {
     id?: number;
     nom?: string;
-    email?: string;
+    email?: string | null;
     slug?: string;
     bio?: string;
     domaine?: string;
     videoUrl?: string;
-    photo?: string;
+    photo?: string | null;
     actif?: boolean;
   };
 }
@@ -107,6 +106,13 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
 
+      {/* DEV debug: show session indicator */}
+      {process.env.NODE_ENV !== 'production' && (
+        <div className="mb-4 p-3 rounded-lg bg-yellow-50 border border-yellow-200 text-sm text-yellow-800">
+          Environnement: DEV — Vous pouvez voir les états de session côté serveur dans les logs.
+        </div>
+      )}
+
       {/* Photo */}
       <div>
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
@@ -118,7 +124,7 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
             onClick={() => fileInputRef.current?.click()}
           >
             {photoPreview ? (
-              <Image
+              <img
                 src={photoPreview}
                 alt="Aperçu"
                 width={96}
@@ -177,13 +183,12 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Adresse email <span className="text-red-400">*</span>
+              Adresse email <span className="text-gray-400 font-normal">(optionnel)</span>
             </label>
             <input
               name="email"
               type="email"
-              defaultValue={defaultValues.email}
-              required
+              defaultValue={defaultValues.email ?? ""}
               placeholder="jean@email.com"
               className={inputClass}
             />
@@ -191,7 +196,7 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Mot de passe
-              {mode === "create" && <span className="text-red-400"> *</span>}
+              {mode === "create" && <span className="text-gray-400 font-normal text-xs ml-1">(optionnel)</span>}
               {mode === "edit" && (
                 <span className="text-gray-400 font-normal text-xs ml-1">(vide = inchangé)</span>
               )}
@@ -200,7 +205,6 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
               <input
                 name="password"
                 type={showPassword ? "text" : "password"}
-                required={mode === "create"}
                 placeholder="••••••••"
                 className={`${inputClass} pr-10`}
               />

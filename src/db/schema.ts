@@ -24,6 +24,7 @@ export const domaineEnum = pgEnum("domaine", [
   "developpement_web",
   "ecommerce",
   "audiovisuel",
+  "tout",
 ]);
 
 // ─── Table : users (administrateurs) ─────────────────────────────────────────
@@ -44,8 +45,8 @@ export const candidates = pgTable("candidates", {
   id: serial("id").primaryKey(),
   slug: varchar("slug", { length: 255 }).notNull().unique(),
   nom: varchar("nom", { length: 255 }).notNull(),
-  email: varchar("email", { length: 255 }).notNull().unique(),
-  password: text("password").notNull(),
+  email: varchar("email", { length: 255 }),
+  password: text("password"),
   photo: text("photo"),
   photoAffiche: text("photo_affiche"),
   bio: text("bio"),
@@ -65,6 +66,7 @@ export const votes = pgTable("votes", {
     .references(() => candidates.id, { onDelete: "cascade" }),
   nomVotant: varchar("nom_votant", { length: 255 }).notNull(),
   telephone: varchar("telephone", { length: 20 }).notNull(),
+  email: varchar("email", { length: 255 }),
   nombreVotes: integer("nombre_votes").notNull(),
   montant: integer("montant").notNull(),
   preuve: text("preuve"),
@@ -128,4 +130,5 @@ export type Domaine =
   | "graphisme"
   | "developpement_web"
   | "ecommerce"
-  | "audiovisuel";
+  | "audiovisuel"
+  | "tout";

@@ -38,8 +38,8 @@ export async function PUT(req: NextRequest) {
 
     // Changement de mot de passe
     if (oldPassword && newPassword) {
-      const isValid = await bcrypt.compare(oldPassword, existing[0].password);
-      if (!isValid) {
+      const currentPassword = existing[0].password;
+      if (!currentPassword || !(await bcrypt.compare(oldPassword, currentPassword))) {
         return NextResponse.json(
           { error: "Mot de passe actuel incorrect." },
           { status: 400 }
