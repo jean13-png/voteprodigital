@@ -37,20 +37,40 @@ function Bloc({ value, label }: { value: number; label: string }) {
 }
 
 export default function Countdown() {
-  const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => calcTimeLeft());
+  // Initialiser à zéro pour éviter le mismatch serveur/client (hydration error)
+  const [timeLeft, setTimeLeft] = useState<TimeLeft>({ jours: 0, heures: 0, minutes: 0, secondes: 0 });
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Premier calcul après montage (évite l'erreur d'hydration)
+    setMounted(true);
     setTimeLeft(calcTimeLeft());
     const timer = setInterval(() => setTimeLeft(calcTimeLeft()), 1000);
     return () => clearInterval(timer);
   }, []);
 
   const isOver =
+    mounted &&
     timeLeft.jours === 0 &&
     timeLeft.heures === 0 &&
     timeLeft.minutes === 0 &&
     timeLeft.secondes === 0;
+
+  // Avant montage côté client : afficher des tirets pour éviter le flash
+  if (!mounted) {
+    return (
+      <div className="flex w-full max-w-full items-center justify-center gap-2 sm:gap-3 md:gap-4">
+        {["Jours", "Heures", "Minutes", "Secondes"].map((label, i) => (
+          <div key={label} className="flex min-w-0 flex-col items-center">
+            <div className="bg-[#1B2A6B] text-white rounded-lg w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 flex items-center justify-center shadow-sm">
+              <span className="text-lg sm:text-2xl md:text-3xl font-extrabold tabular-nums leading-none">--</span>
+            </div>
+            <span className="mt-1.5 text-[10px] sm:text-xs font-semibold text-gray-300 uppercase tracking-wider">{label}</span>
+            {i < 3 && <span />}
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   if (isOver) {
     return (
