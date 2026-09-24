@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { Loader2, Mail, Phone, User, Hash } from "lucide-react";
 import { VOTE_PRICE } from "@/lib/constants";
 import { swalError, swalToast } from "@/lib/swal";
-import { csrfFetch } from "@/lib/csrf";
 
 interface VoteFormProps {
   candidatId: number;
@@ -68,7 +67,7 @@ export default function VoteForm({ candidatId, candidatSlug }: VoteFormProps) {
     setLoading(true);
 
     try {
-      const res = await csrfFetch("/api/votes", {
+      const res = await fetch("/api/votes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -126,7 +125,7 @@ export default function VoteForm({ candidatId, candidatSlug }: VoteFormProps) {
       {/* Téléphone */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">
-          Numéro de téléphone <span className="text-gray-400 font-normal">(avec 01)</span>
+          Numéro de téléphone Mobile Money
         </label>
         <div className="relative">
           <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -138,6 +137,9 @@ export default function VoteForm({ candidatId, candidatSlug }: VoteFormProps) {
             className={`w-full pl-10 pr-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1B2A6B]/20 focus:border-[#1B2A6B] transition-colors ${errors.telephone ? "border-red-300" : "border-gray-200"}`}
           />
         </div>
+        <p className="mt-1 text-xs text-gray-400">
+          10 chiffres commençant par <strong>01</strong> — ex: <strong>0167000000</strong> (MTN/Moov Bénin)
+        </p>
         {errors.telephone && <p className="mt-1 text-xs text-red-600">{errors.telephone}</p>}
       </div>
 

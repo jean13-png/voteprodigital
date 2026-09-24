@@ -22,18 +22,19 @@ export async function createFedaPayTransaction(params: CreateTransactionParams) 
   const firstname = parts[0] ?? params.nomVotant;
   const lastname = parts.slice(1).join(" ") || "-";
 
-  // Convertir téléphone béninois vers format international E.164
-  // Nouveaux numéros béninois (depuis 2023) : 10 chiffres, ex: 0167000000
-  // Format international : +22901XXXXXXXX (on garde tout sauf le 0 initial)
-  // Ex: 0167000000 → +229167000000 (on remplace le 0 par +229)
-  // Ex: +22967000000 → inchangé
+  // Format FedaPay : numéro LOCAL sans le 0 initial ni l'indicatif +229
+  // Doc officielle : number: '97808080', country: 'BJ'
+  // Anciens numéros (8 chiffres) : 097808080 → 97808080
+  // Nouveaux numéros (10 chiffres depuis 2023) : 0167000000 → 167000000
   let phone = params.telephone.replace(/\s/g, "").replace(/-/g, "");
-  if (phone.startsWith("00229")) {
-    phone = "+" + phone.substring(2); // 00229... → +229...
-  } else if (phone.startsWith("0") && !phone.startsWith("+")) {
-    phone = "+229" + phone.substring(1); // 0167000000 → +229167000000
-  } else if (!phone.startsWith("+")) {
-    phone = "+229" + phone; // 167000000 → +229167000000
+  // Supprimer indicatif si présent
+  if (phone.startsWith("+22901") || phone.startsWith("+229")) {
+    phone = phone.replace(/^\+229/, "");
+  } else if (phone.startsWith("00229")) {
+    phone = phone.replace(/^00229/, "");
+  } else if (phone.startsWith("0")) {
+    // Supprimer le 0 initial : 0167000000 → 167000000
+    phone = phone.substring(1);
   }
 
   const transaction = await Transaction.create({
@@ -46,7 +47,7 @@ export async function createFedaPayTransaction(params: CreateTransactionParams) 
       lastname,
       phone_number: {
         number: phone,
-        country: "bj",
+        country: "BJ",
       },
     },
   });
