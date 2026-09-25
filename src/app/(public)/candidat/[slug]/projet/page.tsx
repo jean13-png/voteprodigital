@@ -6,10 +6,33 @@ import { getCandidateBySlug, VOTE_PRICE } from "@/lib/db-queries";
 
 function getYouTubeId(url: string | null): string | null {
   if (!url) return null;
-  const match = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-  );
-  return match?.[1] ?? null;
+
+  try {
+    const normalized = url.trim();
+    const parsed = new URL(normalized);
+    const hostname = parsed.hostname.replace(/^www\./, "").toLowerCase();
+
+    if (hostname === "youtu.be") {
+      const videoId = parsed.pathname.replace("/", "").split("/")[0];
+      return /^[a-zA-Z0-9_-]{11}$/.test(videoId) ? videoId : null;
+    }
+
+    if (hostname === "youtube.com" || hostname === "m.youtube.com" || hostname === "music.youtube.com") {
+      const candidates = [
+        parsed.searchParams.get("v"),
+        parsed.pathname.split("/").filter(Boolean)[1] ?? null,
+      ];
+
+      const match = candidates.find((candidate) => /^[a-zA-Z0-9_-]{11}$/.test(candidate ?? ""));
+      return match ?? null;
+    }
+  } catch {
+    // Support older URL patterns without a valid URL object.
+    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+    return match?.[1] ?? null;
+  }
+
+  return null;
 }
 
 function parseProjectLinks(value: string | null): Array<{ label: string; url: string }> {
@@ -60,19 +83,33 @@ export default async function CandidatProjetPage({ params }: { params: Promise<{
               <h1 className="text-3xl md:text-4xl font-extrabold text-[#1B2A6B] mb-4">{projectTitle}</h1>
               <p className="text-gray-600 leading-relaxed whitespace-pre-line">{projectDescription}</p>
 
-              {youtubeId && (
+              {youtubeId ? (
                 <div className="mt-6 rounded-2xl overflow-hidden border border-gray-100 bg-black">
                   <div className="relative aspect-video">
                     <iframe
                       src={`https://www.youtube.com/embed/${youtubeId}`}
                       title={`Vidéo du projet de ${candidat.nom}`}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      referrerPolicy="strict-origin-when-cross-origin"
                       allowFullScreen
                       className="w-full h-full"
                     />
                   </div>
                 </div>
-              )}
+              ) : candidat.projectVideoUrl ? (
+                <div className="mt-6 rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4">
+                  <p className="text-sm text-gray-600 mb-2">La vidéo du projet n’est pas une vidéo YouTube intégrable.</p>
+                  <a
+                    href={candidat.projectVideoUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-[#1B2A6B] hover:text-[#F5A623]"
+                  >
+                    Ouvrir la vidéo dans un nouvel onglet
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
+                </div>
+              ) : null}
             </div>
 
             <div className="bg-[#1B2A6B] p-6 md:p-8 text-white">
