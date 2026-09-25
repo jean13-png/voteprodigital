@@ -26,6 +26,11 @@ export async function getCandidatesRanked(limit?: number) {
       bio: candidates.bio,
       domaine: candidates.domaine,
       videoUrl: candidates.videoUrl,
+      projectTitle: candidates.projectTitle,
+      projectDescription: candidates.projectDescription,
+      projectVideoUrl: candidates.projectVideoUrl,
+      projectImage: candidates.projectImage,
+      projectPosterImage: candidates.projectPosterImage,
       actif: candidates.actif,
       totalVotes: sql<number>`COALESCE(SUM(CASE WHEN ${votes.statut} = 'valide' THEN ${votes.nombreVotes} ELSE 0 END), 0)`.as(
         "total_votes"
@@ -78,6 +83,11 @@ export async function getCandidatesRankedPaginated(options: {
         bio: candidates.bio,
         domaine: candidates.domaine,
         videoUrl: candidates.videoUrl,
+        projectTitle: candidates.projectTitle,
+        projectDescription: candidates.projectDescription,
+        projectVideoUrl: candidates.projectVideoUrl,
+        projectImage: candidates.projectImage,
+        projectPosterImage: candidates.projectPosterImage,
         actif: candidates.actif,
         totalVotes: sql<number>`COALESCE(SUM(CASE WHEN ${votes.statut} = 'valide' THEN ${votes.nombreVotes} ELSE 0 END), 0)`.as("total_votes"),
       })
@@ -120,6 +130,11 @@ export async function getCandidateBySlug(slug: string) {
       bio: candidates.bio,
       domaine: candidates.domaine,
       videoUrl: candidates.videoUrl,
+      projectTitle: candidates.projectTitle,
+      projectDescription: candidates.projectDescription,
+      projectVideoUrl: candidates.projectVideoUrl,
+      projectImage: candidates.projectImage,
+      projectPosterImage: candidates.projectPosterImage,
       actif: candidates.actif,
       totalVotes: sql<number>`COALESCE(SUM(CASE WHEN ${votes.statut} = 'valide' THEN ${votes.nombreVotes} ELSE 0 END), 0)`.as(
         "total_votes"

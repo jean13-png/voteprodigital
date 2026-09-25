@@ -44,7 +44,7 @@ export default function CandidatCard({
               src={displayPhoto}
               alt={nom}
               fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
+              className="object-cover object-top group-hover:scale-105 transition-transform duration-300"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
           ) : (
@@ -89,10 +89,15 @@ export default function CandidatCard({
             </div>
           </div>
 
-          {/* Bouton vote */}
-          <button className="mt-3 w-full bg-[#1B2A6B] hover:bg-[#162058] text-white text-sm font-semibold py-2 rounded-lg transition-colors">
-            Voter pour ce candidat
-          </button>
+          {/* Bouton projet */}
+          <div className="mt-3 flex gap-2">
+            <Link
+              href={`/candidat/${slug}/projet`}
+              className="flex-1 bg-[#1B2A6B] hover:bg-[#162058] text-white text-sm font-semibold py-2 rounded-lg transition-colors text-center"
+            >
+              Voir le projet
+            </Link>
+          </div>
         </div>
       </div>
     </Link>

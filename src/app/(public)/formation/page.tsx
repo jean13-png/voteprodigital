@@ -1,3 +1,5 @@
+import FormationInscriptionForm from "@/components/public/FormationInscriptionForm";
+
 const professionalTracks = [
   {
     name: "Formation professionnelle",
@@ -141,7 +143,17 @@ export default function FormationPage() {
           </div>
         </section>
 
-        <section className="border-t border-slate-200 pt-8">
+        <section className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-8">
+          <div className="mb-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#F5A623] mb-2">
+              Inscription rapide
+            </p>
+            <h3 className="text-2xl font-bold text-[#1B2A6B]">Demande d’inscription formation</h3>
+          </div>
+          <FormationInscriptionForm />
+        </section>
+
+        <section className="border-t border-slate-200 pt-8 mt-10">
           <h3 className="text-2xl font-bold text-[#1B2A6B] mb-4">Ce que tu reçois</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-700">
             <div className="border border-slate-200 p-4 bg-slate-50">

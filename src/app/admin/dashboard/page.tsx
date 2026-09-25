@@ -57,25 +57,34 @@ export default async function AdminDashboard() {
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#F5A623] mb-2">
               Gestion des accès
             </p>
-            <h2 className="text-xl font-bold">Générer les identifiants étudiants</h2>
+            <h2 className="text-xl font-bold">Générer le PDF des identifiants candidats</h2>
             <p className="mt-1 text-sm text-slate-200">
-              Génère automatiquement un mot de passe unique pour chaque étudiant disposant d’un email et l’envoie par e-mail.
+              Génére un document PDF contenant les identifiants de connexion de chaque candidat ayant un email, avec possibilité d’enregistrer un mot de passe unique pour chaque compte.
             </p>
           </div>
 
-          <form action={generateCandidateCredentials} className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <label className="inline-flex items-center gap-2 text-sm text-slate-100">
-              <input type="checkbox" name="includePdf" value="true" className="h-4 w-4 rounded border-slate-300 text-[#F5A623] focus:ring-[#F5A623]" />
-              Joindre le PDF
-            </label>
-            <button
-              type="submit"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#F5A623] px-4 py-2.5 text-sm font-semibold text-[#1B2A6B] transition hover:bg-[#e59a12]"
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Link
+              href="/admin/identifiants"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-[#1B2A6B] transition hover:bg-slate-100"
             >
-              <Send className="h-4 w-4" />
-              Générer et envoyer
-            </button>
-          </form>
+              <FileText className="h-4 w-4" />
+              Voir les identifiants
+            </Link>
+            <form action={generateCandidateCredentials} className="flex items-center gap-3">
+              <label className="inline-flex items-center gap-2 text-sm text-slate-100">
+                <input type="checkbox" name="includePdf" value="true" className="h-4 w-4 rounded border-slate-300 text-[#F5A623] focus:ring-[#F5A623]" />
+                Inclure le PDF
+              </label>
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#F5A623] px-4 py-2.5 text-sm font-semibold text-[#1B2A6B] transition hover:bg-[#e59a12]"
+              >
+                <Send className="h-4 w-4" />
+                Générer
+              </button>
+            </form>
+          </div>
         </div>
       </div>
       <div className="mb-7">

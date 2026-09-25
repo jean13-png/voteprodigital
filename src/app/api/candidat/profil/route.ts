@@ -13,7 +13,18 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { nom, email, bio, oldPassword, newPassword } = body;
+    const {
+      nom,
+      email,
+      bio,
+      projectTitle,
+      projectDescription,
+      projectVideoUrl,
+      projectImage,
+      projectPosterImage,
+      oldPassword,
+      newPassword,
+    } = body;
     const candidatId = parseInt(session.user.id);
 
     const existing = await db
@@ -29,6 +40,11 @@ export async function PUT(req: NextRequest) {
       nom: nom?.trim(),
       email: email?.trim().toLowerCase(),
       bio: bio?.trim() || null,
+      projectTitle: projectTitle?.trim() || null,
+      projectDescription: projectDescription?.trim() || null,
+      projectVideoUrl: projectVideoUrl?.trim() || null,
+      projectImage: projectImage?.trim() || null,
+      projectPosterImage: projectPosterImage?.trim() || null,
       updatedAt: new Date(),
     };
 

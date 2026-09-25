@@ -8,7 +8,16 @@ import { csrfFetch } from "@/lib/csrf";
 
 interface Props {
   candidatId: number;
-  defaultValues: { nom: string; email?: string | null; bio: string };
+  defaultValues: {
+    nom: string;
+    email?: string | null;
+    bio: string;
+    projectTitle?: string;
+    projectDescription?: string;
+    projectVideoUrl?: string;
+    projectImage?: string;
+    projectPosterImage?: string;
+  };
 }
 
 export default function ProfilForm({ candidatId, defaultValues }: Props) {
@@ -29,6 +38,11 @@ export default function ProfilForm({ candidatId, defaultValues }: Props) {
       nom: getValue("nom"),
       email: getValue("email"),
       bio: getValue("bio"),
+      projectTitle: getValue("projectTitle"),
+      projectDescription: getValue("projectDescription"),
+      projectVideoUrl: getValue("projectVideoUrl"),
+      projectImage: getValue("projectImage"),
+      projectPosterImage: getValue("projectPosterImage"),
       id: String(candidatId),
     };
 
@@ -73,6 +87,32 @@ export default function ProfilForm({ candidatId, defaultValues }: Props) {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">Présentation / Bio</label>
         <textarea name="bio" defaultValue={defaultValues.bio} rows={4} className={`${inputClass} resize-none`} />
+      </div>
+
+      <div className="border-t border-gray-100 pt-5">
+        <p className="text-sm font-semibold text-gray-700 mb-4">Mon projet</p>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Titre du projet</label>
+            <input name="projectTitle" defaultValue={defaultValues.projectTitle ?? ""} placeholder="Mon projet" className={inputClass} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
+            <textarea name="projectDescription" defaultValue={defaultValues.projectDescription ?? ""} rows={5} className={`${inputClass} resize-none`} placeholder="Décrivez votre projet, ce qu'il apporte, la solution, le public cible..." />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Lien vidéo YouTube</label>
+            <input name="projectVideoUrl" defaultValue={defaultValues.projectVideoUrl ?? ""} placeholder="https://youtube.com/watch?v=..." className={inputClass} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Image du projet</label>
+            <input name="projectImage" defaultValue={defaultValues.projectImage ?? ""} placeholder="https://..." className={inputClass} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Affiche / visuel principal</label>
+            <input name="projectPosterImage" defaultValue={defaultValues.projectPosterImage ?? ""} placeholder="https://..." className={inputClass} />
+          </div>
+        </div>
       </div>
 
       <div className="border-t border-gray-100 pt-5">

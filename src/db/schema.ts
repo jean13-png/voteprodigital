@@ -47,11 +47,17 @@ export const candidates = pgTable("candidates", {
   nom: varchar("nom", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }),
   password: text("password"),
+  generatedPassword: text("generated_password"),
   photo: text("photo"),
   photoAffiche: text("photo_affiche"),
   bio: text("bio"),
   domaine: domaineEnum("domaine").notNull(),
   videoUrl: text("video_url"),
+  projectTitle: text("project_title"),
+  projectDescription: text("project_description"),
+  projectVideoUrl: text("project_video_url"),
+  projectImage: text("project_image"),
+  projectPosterImage: text("project_poster_image"),
   actif: boolean("actif").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -126,6 +132,16 @@ export const formationInscriptions = pgTable("formation_inscriptions", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const contactMessages = pgTable("contact_messages", {
+  id: serial("id").primaryKey(),
+  nom: varchar("nom", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  telephone: varchar("telephone", { length: 255 }),
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // ─── Types inférés ────────────────────────────────────────────────────────────
 
 export type User = typeof users.$inferSelect;
@@ -148,3 +164,6 @@ export type Domaine =
 
 export type FormationInscription = typeof formationInscriptions.$inferSelect;
 export type NewFormationInscription = typeof formationInscriptions.$inferInsert;
+
+export type ContactMessage = typeof contactMessages.$inferSelect;
+export type NewContactMessage = typeof contactMessages.$inferInsert;

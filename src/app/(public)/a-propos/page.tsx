@@ -78,7 +78,17 @@ const partnerships = [
   "Partenariats culturels et événementiels",
 ];
 
-export default function AboutPage() {
+export default function AboutPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ contact?: string }> | { contact?: string };
+}) {
+  const contactStatus = typeof searchParams === "object" && searchParams !== null
+    ? "then" in searchParams
+      ? undefined
+      : searchParams.contact
+    : undefined;
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
       <div className="mb-8">
@@ -91,6 +101,12 @@ export default function AboutPage() {
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-10 shadow-sm">
+        {contactStatus === "success" && (
+          <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            Votre message a bien été envoyé. Notre équipe vous répondra très prochainement.
+          </div>
+        )}
+
         <section className="mb-12">
           <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_0.9fr] gap-6 items-center">
             <div>
@@ -103,10 +119,18 @@ export default function AboutPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="overflow-hidden border border-slate-200 bg-slate-100 h-32">
-                <img src="/images/logo.jpeg" alt="ProDigital Center" className="h-full w-full object-cover" />
+                <img
+                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80"
+                  alt="Apprenants engagés dans une formation digitale"
+                  className="h-full w-full object-cover"
+                />
               </div>
               <div className="overflow-hidden border border-slate-200 bg-slate-100 h-32">
-                <img src="/images/logo.jpeg" alt="ProDigital Academy" className="h-full w-full object-cover grayscale" />
+                <img
+                  src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=80"
+                  alt="Professionnels travaillant sur un projet numérique"
+                  className="h-full w-full object-cover grayscale"
+                />
               </div>
             </div>
           </div>
@@ -284,26 +308,37 @@ export default function AboutPage() {
               </div>
             </div>
 
-            <form className="border border-slate-200 bg-slate-50 p-5 space-y-4">
+            <form
+              id="about-contact-form"
+              className="border border-slate-200 bg-slate-50 p-5 space-y-4"
+              method="post"
+              action="/api/contact"
+            >
               <div>
                 <label htmlFor="contact-name" className="mb-2 block text-sm font-medium text-slate-700">
                   Nom
                 </label>
-                <input id="contact-name" type="text" className="w-full border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none focus:border-[#1B2A6B]" placeholder="Votre nom" />
+                <input id="contact-name" name="nom" type="text" required className="w-full border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none focus:border-[#1B2A6B]" placeholder="Votre nom" />
               </div>
               <div>
                 <label htmlFor="contact-email" className="mb-2 block text-sm font-medium text-slate-700">
                   Email
                 </label>
-                <input id="contact-email" type="email" className="w-full border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none focus:border-[#1B2A6B]" placeholder="votre@email.com" />
+                <input id="contact-email" name="email" type="email" required className="w-full border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none focus:border-[#1B2A6B]" placeholder="votre@email.com" />
+              </div>
+              <div>
+                <label htmlFor="contact-telephone" className="mb-2 block text-sm font-medium text-slate-700">
+                  Téléphone
+                </label>
+                <input id="contact-telephone" name="telephone" type="tel" className="w-full border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none focus:border-[#1B2A6B]" placeholder="+229 ..." />
               </div>
               <div>
                 <label htmlFor="contact-message" className="mb-2 block text-sm font-medium text-slate-700">
                   Message
                 </label>
-                <textarea id="contact-message" rows={4} className="w-full border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none focus:border-[#1B2A6B]" placeholder="Votre message..." />
+                <textarea id="contact-message" name="message" rows={4} required className="w-full border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none focus:border-[#1B2A6B]" placeholder="Votre message..." />
               </div>
-              <button type="button" className="inline-flex items-center justify-center bg-[#1B2A6B] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#162058]">
+              <button type="submit" className="inline-flex items-center justify-center bg-[#1B2A6B] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#162058]">
                 Envoyer le message
               </button>
             </form>

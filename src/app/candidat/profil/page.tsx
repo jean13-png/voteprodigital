@@ -33,6 +33,11 @@ export default async function CandidatProfilPage() {
               nom: candidat.nom,
               email: candidat.email,
               bio: candidat.bio ?? "",
+              projectTitle: candidat.projectTitle ?? "",
+              projectDescription: candidat.projectDescription ?? "",
+              projectVideoUrl: candidat.projectVideoUrl ?? "",
+              projectImage: candidat.projectImage ?? "",
+              projectPosterImage: candidat.projectPosterImage ?? "",
             }}
           />
         </div>

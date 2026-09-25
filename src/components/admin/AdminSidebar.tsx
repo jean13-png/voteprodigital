@@ -11,6 +11,7 @@ import {
   GraduationCap,
   X,
   BookOpen,
+  Mail,
 } from "lucide-react";
 
 const navItems = [
@@ -18,6 +19,7 @@ const navItems = [
   { href: "/admin/votes", label: "Votes", icon: Vote },
   { href: "/admin/candidats", label: "Candidats", icon: Users },
   { href: "/admin/inscriptions", label: "Inscriptions", icon: BookOpen },
+  { href: "/admin/contact", label: "Contact", icon: Mail },
 ];
 
 interface Props {
@@ -46,8 +48,12 @@ export default function AdminSidebar({ open, onClose }: Props) {
         {/* Logo */}
         <div className="flex items-center justify-between px-5 h-16 border-b border-white/10 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
-              <GraduationCap className="w-4 h-4 text-[#F5A623]" />
+            <div className="w-10 h-10 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-white/20 flex items-center justify-center">
+              <img
+                src="/images/logo.jpeg"
+                alt="ProDigital Center"
+                className="h-full w-full object-cover"
+              />
             </div>
             <div className="leading-tight">
               <span className="block text-xs font-extrabold uppercase tracking-tight">

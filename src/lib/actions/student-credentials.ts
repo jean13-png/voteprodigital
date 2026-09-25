@@ -45,6 +45,7 @@ export async function generateCandidateCredentials(formData: FormData) {
       .update(candidates)
       .set({
         password: hashedPassword,
+        generatedPassword: password,
         updatedAt: new Date(),
       })
       .where(eq(candidates.id, row.id));

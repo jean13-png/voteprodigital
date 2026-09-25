@@ -310,13 +310,21 @@ export default async function CandidatPage({
               <p className="text-white/70 text-sm mb-5">
                 1 vote = {VOTE_PRICE} FCFA. Vous pouvez voter autant de fois que vous le souhaitez.
               </p>
-              <Link
-                href={`/voter/${candidat.slug}`}
-                className="inline-flex items-center gap-2 bg-[#F5A623] hover:bg-[#e09516] text-white font-bold px-6 py-3 transition-colors"
-              >
-                Voter maintenant
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  href={`/candidat/${candidat.slug}/projet`}
+                  className="inline-flex items-center justify-center gap-2 bg-white text-[#1B2A6B] font-bold px-5 py-3 transition-colors"
+                >
+                  Voir le projet
+                </Link>
+                <Link
+                  href={`/voter/${candidat.slug}`}
+                  className="inline-flex items-center justify-center gap-2 bg-[#F5A623] hover:bg-[#e09516] text-white font-bold px-6 py-3 transition-colors"
+                >
+                  Voter maintenant
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
           </div>
         </div>

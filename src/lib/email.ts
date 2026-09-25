@@ -175,6 +175,47 @@ export async function sendPasswordResetEmail(email: string, token: string) {
   }
 }
 
+export async function sendContactMessageNotification(data: {
+  nom: string;
+  email: string;
+  telephone?: string | null;
+  message: string;
+}) {
+  if (!isEmailConfigured()) return;
+
+  try {
+    await sendEmail({
+      to: ADMIN_EMAIL,
+      subject: `📩 Nouveau message de contact — ${data.nom}`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 680px; margin: 0 auto;">
+          <div style="background: #1B2A6B; padding: 24px; border-radius: 12px 12px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 20px;">Nouveau message de contact</h1>
+            <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0; font-size: 14px;">ProDigital Center</p>
+          </div>
+          <div style="background: white; padding: 24px; border: 1px solid #e5e7eb; border-top: none;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 8px 0; color: #6b7280; width: 140px; font-size: 14px;">Nom</td><td style="padding: 8px 0; font-size: 14px; font-weight: 700; color: #111827;">${data.nom}</td></tr>
+              <tr><td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Email</td><td style="padding: 8px 0; font-size: 14px; color: #111827;">${data.email}</td></tr>
+              <tr><td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Téléphone</td><td style="padding: 8px 0; font-size: 14px; color: #111827;">${data.telephone || "—"}</td></tr>
+            </table>
+            <div style="margin-top: 20px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px;">
+              <p style="margin: 0 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: #6b7280; font-weight: 700;">Message</p>
+              <p style="margin: 0; font-size: 14px; line-height: 1.7; color: #374151; white-space: pre-line;">${data.message}</p>
+            </div>
+          </div>
+          <div style="background: #f9fafb; padding: 16px; border-radius: 0 0 12px 12px; border: 1px solid #e5e7eb; border-top: none; text-align: center;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">ProDigital Center &copy; ${new Date().getFullYear()}</p>
+          </div>
+        </div>
+      `,
+    });
+  } catch (err) {
+    logError("Email sendContactMessageNotification", err);
+    throw err;
+  }
+}
+
 function generateCandidateCredentialsPDF({
   nom,
   email,
