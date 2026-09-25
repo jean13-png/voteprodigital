@@ -44,6 +44,13 @@ const quickLinks = [
   { href: "/candidat/login", label: "Espace candidat" },
 ];
 
+const legalLinks = [
+  { href: "/mentions-legales", label: "Mentions légales" },
+  { href: "/cgu", label: "CGU" },
+  { href: "/politique-confidentialite", label: "Politique de confidentialité" },
+  { href: "/politique-cookies", label: "Politique des cookies" },
+];
+
 async function getCandidatesCount(): Promise<number> {
   const [row] = await db
     .select({ count: sql<number>`COUNT(*)` })
@@ -83,6 +90,24 @@ export default async function Footer() {
             </h3>
             <ul className="space-y-2.5">
               {quickLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-white/70 hover:text-white transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-4">
+              Légal
+            </h3>
+            <ul className="space-y-2.5">
+              {legalLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
