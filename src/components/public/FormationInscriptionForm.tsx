@@ -18,11 +18,13 @@ export default function FormationInscriptionForm() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
+
     setIsSubmitting(true);
     setStatus("idle");
     setMessage("");
 
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(form);
     const payload = {
       nom: String(formData.get("nom") ?? "").trim(),
       telephone: String(formData.get("telephone") ?? "").trim(),
@@ -46,7 +48,10 @@ export default function FormationInscriptionForm() {
 
       setStatus("success");
       setMessage("Votre demande a bien été enregistrée. Notre équipe vous contactera très prochainement.");
-      event.currentTarget.reset();
+
+      if (form && typeof form.reset === "function") {
+        form.reset();
+      }
     } catch (error) {
       setStatus("error");
       setMessage(error instanceof Error ? error.message : "Une erreur est survenue.");
