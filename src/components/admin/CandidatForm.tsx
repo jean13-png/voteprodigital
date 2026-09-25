@@ -44,10 +44,8 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
   const [loading, setLoading] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(defaultValues.photo ?? null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [projectImagePreview, setProjectImagePreview] = useState<string | null>(defaultValues.projectImage ?? null);
-  const [projectPosterPreview, setProjectPosterPreview] = useState<string | null>(defaultValues.projectPosterImage ?? null);
+  const [projectImagePreview, setProjectImagePreview] = useState<string | null>(defaultValues.projectImage ?? defaultValues.projectPosterImage ?? null);
   const [projectImageFile, setProjectImageFile] = useState<File | null>(null);
-  const [projectPosterFile, setProjectPosterFile] = useState<File | null>(null);
   const [slugValue, setSlugValue] = useState(defaultValues.slug ?? "");
 
   function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -63,13 +61,6 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
     if (!file) return;
     setProjectImageFile(file);
     setProjectImagePreview(URL.createObjectURL(file));
-  }
-
-  function handleProjectPosterSelection(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setProjectPosterFile(file);
-    setProjectPosterPreview(URL.createObjectURL(file));
   }
 
   function handleNomChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -101,8 +92,9 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
       const password = getValue("password");
       if (password) formData.append("password", password);
       if (photoFile) formData.append("photo", photoFile);
-      if (projectImageFile) formData.append("projectImageFile", projectImageFile);
-      if (projectPosterFile) formData.append("projectPosterImageFile", projectPosterFile);
+      if (projectImageFile) {
+        formData.append("projectImageFile", projectImageFile);
+      }
 
       const url =
         mode === "create"
@@ -348,9 +340,9 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
             <input name="projectVideoUrl" type="url" defaultValue={defaultValues.projectVideoUrl ?? ""} placeholder="https://youtube.com/watch?v=..." className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Image du projet</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Affiches ou visuels du projet</label>
             <div className="space-y-2">
-              <input name="projectImage" defaultValue={defaultValues.projectImage ?? ""} placeholder="https://..." className={inputClass} />
+              <input name="projectImage" defaultValue={defaultValues.projectImage ?? defaultValues.projectPosterImage ?? ""} placeholder="https://..." className={inputClass} />
               <div className="flex items-center gap-3">
                 <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[#1B2A6B]/30 bg-white px-3 py-2 text-xs font-medium text-[#1B2A6B] hover:bg-[#1B2A6B]/5">
                   <Upload className="w-3.5 h-3.5" />
@@ -359,25 +351,7 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
                 </label>
                 {projectImagePreview && (
                   <div className="h-12 w-12 overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
-                    <img src={projectImagePreview} alt="Aperçu image du projet" className="h-full w-full object-cover" />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Affiche / visuel principal</label>
-            <div className="space-y-2">
-              <input name="projectPosterImage" defaultValue={defaultValues.projectPosterImage ?? ""} placeholder="https://..." className={inputClass} />
-              <div className="flex items-center gap-3">
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[#1B2A6B]/30 bg-white px-3 py-2 text-xs font-medium text-[#1B2A6B] hover:bg-[#1B2A6B]/5">
-                  <Upload className="w-3.5 h-3.5" />
-                  Uploader une affiche
-                  <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleProjectPosterSelection} />
-                </label>
-                {projectPosterPreview && (
-                  <div className="h-12 w-12 overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
-                    <img src={projectPosterPreview} alt="Aperçu affiche du projet" className="h-full w-full object-cover" />
+                    <img src={projectImagePreview} alt="Aperçu du visuel du projet" className="h-full w-full object-cover" />
                   </div>
                 )}
               </div>
