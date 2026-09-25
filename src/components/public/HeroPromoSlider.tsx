@@ -10,6 +10,7 @@ const promos = [
     description: "Des parcours pratiques en IA, design, marketing digital et développement web pour accélérer votre carrière.",
     href: "/formation",
     label: "Découvrir les formations",
+    image: "/images/debuter-en-programmation.jpg",
   },
   {
     kicker: "Bootcamp 2026",
@@ -17,6 +18,7 @@ const promos = [
     description: "Un programme immersif pour développer des compétences concrètes, visibles et directement utiles sur le marché.",
     href: "/a-propos",
     label: "En savoir plus",
+    image: "/images/ia_informatique.jpg",
   },
   {
     kicker: "Projet en action",
@@ -24,6 +26,7 @@ const promos = [
     description: "Mettez en avant votre projet, votre idée et votre potentiel avec une présence numérique professionnelle.",
     href: "/candidats",
     label: "Voir les candidats",
+    image: "/images/images.jpeg",
   },
   {
     kicker: "Innovation",
@@ -31,6 +34,7 @@ const promos = [
     description: "Des compétences qui allient créativité, marketing, stratégie et exécution pour performer dans le numérique.",
     href: "/formation",
     label: "Je veux m'inscrire",
+    image: "/images/metiers-informatique-meilleures-remunerations.jpg",
   },
 ];
 
@@ -52,8 +56,8 @@ export default function HeroPromoSlider() {
       <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-white/10 shadow-lg shadow-[#0f1d5b]/20 backdrop-blur-sm">
         <div className="relative h-52 w-full overflow-hidden">
           <img
-            src="/images/ia_informatique.jpg"
-            alt="Apprenants et professionnels en formation digitale"
+            src={current.image}
+            alt={current.title}
             className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0f1d5b]/80 via-[#0f1d5b]/30 to-transparent" />
