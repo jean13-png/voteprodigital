@@ -218,8 +218,8 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
             />
           </div>
 
-          {/* Slug affiché en lecture seule en création, éditable en édition */}
-          <div className="sm:col-span-2">
+          {/* Slug généré automatiquement et masqué au formulaire */}
+          <div className="sm:col-span-2 hidden">
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Slug
             </label>
