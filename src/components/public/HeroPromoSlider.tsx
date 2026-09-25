@@ -49,40 +49,51 @@ export default function HeroPromoSlider() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-white/10 p-5 sm:p-6 shadow-lg shadow-[#0f1d5b]/20 backdrop-blur-sm">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#F5A623]">
-            {current.kicker}
-          </span>
-          <span className="rounded-full border border-white/20 bg-white/5 px-2 py-1 text-[10px] font-medium text-white/80">
-            {index + 1}/{promos.length}
-          </span>
+      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-white/10 shadow-lg shadow-[#0f1d5b]/20 backdrop-blur-sm">
+        <div className="relative h-52 w-full overflow-hidden">
+          <img
+            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80"
+            alt="Apprenants et professionnels en formation digitale"
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0f1d5b]/80 via-[#0f1d5b]/30 to-transparent" />
         </div>
 
-        <h3 className="text-2xl font-extrabold leading-tight text-white mb-3">
-          {current.title}
-        </h3>
+        <div className="p-5 sm:p-6">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#F5A623]">
+              {current.kicker}
+            </span>
+            <span className="rounded-full border border-white/20 bg-white/5 px-2 py-1 text-[10px] font-medium text-white/80">
+              {index + 1}/{promos.length}
+            </span>
+          </div>
 
-        <p className="text-sm leading-6 text-white/75 mb-5 min-h-[72px]">
-          {current.description}
-        </p>
+          <h3 className="text-2xl font-extrabold leading-tight text-white mb-3">
+            {current.title}
+          </h3>
 
-        <div className="flex items-center justify-between gap-3">
-          <Link
-            href={current.href}
-            className="inline-flex items-center justify-center bg-[#F5A623] px-4 py-2.5 text-sm font-semibold text-[#1B2A6B] transition hover:bg-[#e8a21b]"
-          >
-            {current.label}
-          </Link>
-          <div className="flex items-center gap-1.5">
-            {promos.map((promo, promoIndex) => (
-              <span
-                key={promo.title}
-                className={`h-1.5 rounded-full transition-all ${
-                  promoIndex === index ? "w-8 bg-[#F5A623]" : "w-2 bg-white/25"
-                }`}
-              />
-            ))}
+          <p className="text-sm leading-6 text-white/75 mb-5 min-h-[72px]">
+            {current.description}
+          </p>
+
+          <div className="flex items-center justify-between gap-3">
+            <Link
+              href={current.href}
+              className="inline-flex items-center justify-center bg-[#F5A623] px-4 py-2.5 text-sm font-semibold text-[#1B2A6B] transition hover:bg-[#e8a21b]"
+            >
+              {current.label}
+            </Link>
+            <div className="flex items-center gap-1.5">
+              {promos.map((promo, promoIndex) => (
+                <span
+                  key={promo.title}
+                  className={`h-1.5 rounded-full transition-all ${
+                    promoIndex === index ? "w-8 bg-[#F5A623]" : "w-2 bg-white/25"
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
