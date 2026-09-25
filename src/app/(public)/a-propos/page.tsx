@@ -120,14 +120,14 @@ export default function AboutPage({
             <div className="grid grid-cols-2 gap-3">
               <div className="overflow-hidden border border-slate-200 bg-slate-100 h-32">
                 <img
-                  src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80"
+                  src="/images/metiers-informatique-meilleures-remunerations.jpg"
                   alt="Apprenants engagés dans une formation digitale"
                   className="h-full w-full object-cover"
                 />
               </div>
               <div className="overflow-hidden border border-slate-200 bg-slate-100 h-32">
                 <img
-                  src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=80"
+                  src="/images/images.jpeg"
                   alt="Professionnels travaillant sur un projet numérique"
                   className="h-full w-full object-cover grayscale"
                 />

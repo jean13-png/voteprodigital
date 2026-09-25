@@ -79,18 +79,27 @@ export default function FormationPage() {
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-10 shadow-sm">
-        <section className="mb-12">
-          <div className="bg-[#1B2A6B] text-white p-6 sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#F5A623] mb-3">
-              Bootcamp Digital
-            </p>
-            <h2 className="text-2xl sm:text-3xl font-bold mb-3">
-              Votre avenir numérique commence ici.
-            </h2>
-            <p className="text-base text-slate-200 leading-7 max-w-3xl">
-              Apprenez. Créez. Innovez. Deux packs au choix, 100 % pratique. Chaque pack
-              complet : 10.000 FCFA seulement.
-            </p>
+        <section className="mb-12 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="bg-[#1B2A6B] text-white p-6 sm:p-8">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#F5A623] mb-3">
+                Bootcamp Digital
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-3">
+                Votre avenir numérique commence ici.
+              </h2>
+              <p className="text-base text-slate-200 leading-7 max-w-3xl">
+                Apprenez. Créez. Innovez. Deux packs au choix, 100 % pratique. Chaque pack
+                complet : 10.000 FCFA seulement.
+              </p>
+            </div>
+            <div className="relative min-h-[220px]">
+              <img
+                src="/images/debuter-en-programmation.jpg"
+                alt="Formation numérique et programmation"
+                className="h-full w-full object-cover"
+              />
+            </div>
           </div>
         </section>
 
