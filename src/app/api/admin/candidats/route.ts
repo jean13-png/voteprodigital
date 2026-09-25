@@ -41,6 +41,8 @@ export async function POST(req: NextRequest) {
     const projectLinksRaw = (formData.get("projectLinks") as string)?.trim();
     const projectLinks = projectLinksRaw || null;
     const photoFile = formData.get("photo") as File | null;
+    const projectImageFile = formData.get("projectImageFile") as File | null;
+    const projectPosterImageFile = formData.get("projectPosterImageFile") as File | null;
     
     console.log("[POST /api/admin/candidats-simple] Données:", { nom, slug, domaine, hasPhoto: !!photoFile, projectTitle });
     
@@ -73,6 +75,33 @@ export async function POST(req: NextRequest) {
     // Hash password si fourni
     const hashedPassword = password ? await bcrypt.hash(password, 12) : null;
     console.log("[POST /api/admin/candidats-simple] Password hashé:", !!hashedPassword);
+
+    let resolvedProjectImage = projectImage;
+    let resolvedProjectPosterImage = projectPosterImage;
+
+    if (projectImageFile && projectImageFile.size > 0) {
+      if (isCloudinaryConfigured()) {
+        const validation = validateImageFile(projectImageFile);
+        if (!validation.valid) {
+          return NextResponse.json({ error: validation.error }, { status: 400 });
+        }
+
+        const buffer = Buffer.from(await projectImageFile.arrayBuffer());
+        resolvedProjectImage = await uploadToCloudinary(buffer, "prodigital_projects", `${slug}_project_${Date.now()}`);
+      }
+    }
+
+    if (projectPosterImageFile && projectPosterImageFile.size > 0) {
+      if (isCloudinaryConfigured()) {
+        const validation = validateImageFile(projectPosterImageFile);
+        if (!validation.valid) {
+          return NextResponse.json({ error: validation.error }, { status: 400 });
+        }
+
+        const buffer = Buffer.from(await projectPosterImageFile.arrayBuffer());
+        resolvedProjectPosterImage = await uploadToCloudinary(buffer, "prodigital_projects", `${slug}_poster_${Date.now()}`);
+      }
+    }
     
     // Insertion en base
     const result = await db.insert(candidates).values({
@@ -86,8 +115,8 @@ export async function POST(req: NextRequest) {
       projectTitle,
       projectDescription,
       projectVideoUrl,
-      projectImage,
-      projectPosterImage,
+      projectImage: resolvedProjectImage,
+      projectPosterImage: resolvedProjectPosterImage,
       projectLinks,
       photo: photoUrl,
       actif: true,
