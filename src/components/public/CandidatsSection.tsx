@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Search, ChevronLeft, ChevronRight, X, LayoutGrid } from "lucide-react";
 import CandidatCard from "@/components/public/CandidatCard";
 
@@ -32,10 +31,6 @@ export default function CandidatsSection({
   initialPage,
   initialSearch,
 }: CandidatsSectionProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
   const [candidats, setCandidats] = useState<Candidat[]>(initialCandidats);
   const [total, setTotal] = useState(initialTotal);
   const [totalPages, setTotalPages] = useState(initialTotalPages);
@@ -45,7 +40,6 @@ export default function CandidatsSection({
   const [loading, setLoading] = useState(false);
   const [showAll, setShowAll] = useState(false);
 
-  // Fetch depuis l'API à chaque changement de page ou recherche
   const fetchCandidats = useCallback(async (p: number, q: string, all: boolean) => {
     setLoading(true);
     try {
@@ -84,7 +78,6 @@ export default function CandidatsSection({
     setPage(newPage);
     fetchCandidats(newPage, search, false);
     setShowAll(false);
-    // Scroll vers la section
     document.getElementById("candidats-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -111,9 +104,8 @@ export default function CandidatsSection({
 
   return (
     <div id="candidats-section">
-      {/* ─── Barre de recherche ─────────────────────────────────────────── */}
+      {/* Barre de recherche */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
-        {/* Input recherche */}
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           <input
@@ -133,7 +125,6 @@ export default function CandidatsSection({
           )}
         </div>
 
-        {/* Compteur résultats */}
         <p className="text-sm text-gray-500">
           {loading ? (
             <span className="inline-flex items-center gap-1.5">
@@ -152,9 +143,8 @@ export default function CandidatsSection({
         </p>
       </div>
 
-      {/* ─── Grille candidats ────────────────────────────────────────────── */}
+      {/* Grille */}
       {loading ? (
-        // Skeleton loader
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {Array.from({ length: PAGE_SIZE }).map((_, i) => (
             <div key={i} className="bg-white border border-gray-100 rounded-2xl overflow-hidden animate-pulse">
@@ -198,11 +188,9 @@ export default function CandidatsSection({
         </div>
       )}
 
-      {/* ─── Pagination + Voir tous ──────────────────────────────────────── */}
+      {/* Pagination */}
       {!loading && total > PAGE_SIZE && (
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-
-          {/* Info page */}
           <p className="text-sm text-gray-500 order-2 sm:order-1">
             {showAll ? (
               <>Affichage de <span className="font-semibold text-[#1B2A6B]">{total}</span> candidats</>
@@ -214,10 +202,8 @@ export default function CandidatsSection({
             )}
           </p>
 
-          {/* Contrôles */}
           <div className="flex items-center gap-2 order-1 sm:order-2">
             {showAll ? (
-              // Bouton "Réduire"
               <button
                 onClick={handleShowLess}
                 className="flex items-center gap-2 text-sm font-semibold text-gray-600 border border-gray-200 px-4 py-2 rounded-xl hover:border-[#1B2A6B] hover:text-[#1B2A6B] transition-colors"
@@ -227,7 +213,6 @@ export default function CandidatsSection({
               </button>
             ) : (
               <>
-                {/* Prev */}
                 <button
                   onClick={() => handlePageChange(page - 1)}
                   disabled={page <= 1}
@@ -237,21 +222,11 @@ export default function CandidatsSection({
                   <ChevronLeft className="w-4 h-4" />
                 </button>
 
-                {/* Pages numérotées */}
                 <div className="flex items-center gap-1">
                   {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter((p) => {
-                      // Afficher max 5 pages : première, dernière, page courante ±1
-                      return (
-                        p === 1 ||
-                        p === totalPages ||
-                        Math.abs(p - page) <= 1
-                      );
-                    })
+                    .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
                     .reduce<(number | "...")[]>((acc, p, idx, arr) => {
-                      if (idx > 0 && p - (arr[idx - 1] as number) > 1) {
-                        acc.push("...");
-                      }
+                      if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
                       acc.push(p);
                       return acc;
                     }, [])
@@ -274,7 +249,6 @@ export default function CandidatsSection({
                     )}
                 </div>
 
-                {/* Next */}
                 <button
                   onClick={() => handlePageChange(page + 1)}
                   disabled={page >= totalPages}
@@ -284,10 +258,8 @@ export default function CandidatsSection({
                   <ChevronRight className="w-4 h-4" />
                 </button>
 
-                {/* Séparateur */}
                 <div className="w-px h-6 bg-gray-200 mx-1" />
 
-                {/* Voir tous */}
                 <button
                   onClick={handleShowAll}
                   className="flex items-center gap-2 text-sm font-semibold text-[#1B2A6B] border border-[#1B2A6B]/30 px-4 py-2 rounded-xl hover:bg-[#1B2A6B] hover:text-white transition-colors"
