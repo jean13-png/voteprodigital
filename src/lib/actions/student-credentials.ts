@@ -35,9 +35,9 @@ export async function generateCandidateCredentials(formData: FormData) {
     .from(candidates)
     .where(isNotNull(candidates.email));
 
-  const eligibleRows = scope === "missing"
-    ? rows.filter((row) => !!row.email && (!row.password || !row.generatedPassword))
-    : rows.filter((row) => !!row.email);
+  const eligibleRows = scope === "all"
+    ? rows.filter((row) => !!row.email && !row.generatedPassword)
+    : rows.filter((row) => !!row.email && (!row.password || !row.generatedPassword));
 
   let generated = 0;
   let sent = 0;

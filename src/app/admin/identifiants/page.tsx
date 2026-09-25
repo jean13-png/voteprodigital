@@ -1,7 +1,9 @@
 import { db, candidates } from "@/db";
+import { PasswordReveal } from "@/components/admin/PasswordReveal";
+import { generateCandidateCredentials } from "@/lib/actions/student-credentials";
 import { asc, isNotNull } from "drizzle-orm";
 import Link from "next/link";
-import { ArrowLeft, Download, KeyRound } from "lucide-react";
+import { ArrowLeft, Download, KeyRound, Sparkles } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -36,13 +38,26 @@ export default async function AdminIdentifiantsPage() {
           </p>
         </div>
 
-        <a
-          href="/api/admin/identifiants/pdf"
-          className="inline-flex items-center gap-2 rounded-xl bg-[#1B2A6B] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#162058]"
-        >
-          <Download className="h-4 w-4" />
-          Télécharger le PDF
-        </a>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <form action={generateCandidateCredentials}>
+            <input type="hidden" name="scope" value="all" />
+            <button
+              type="submit"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#F5A623] px-4 py-2.5 text-sm font-semibold text-[#1B2A6B] transition hover:bg-[#e59a12]"
+            >
+              <Sparkles className="h-4 w-4" />
+              Générer tout
+            </button>
+          </form>
+
+          <a
+            href="/api/admin/identifiants/pdf"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#1B2A6B] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#162058]"
+          >
+            <Download className="h-4 w-4" />
+            Télécharger le PDF
+          </a>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
@@ -77,10 +92,10 @@ export default async function AdminIdentifiantsPage() {
                     <td className="px-5 py-3.5 font-semibold text-gray-800">{row.nom}</td>
                     <td className="px-5 py-3.5 text-gray-700">{row.email}</td>
                     <td className="px-5 py-3.5 text-gray-700">
-                      <span className="inline-flex items-center gap-2 rounded-lg bg-[#F5A623]/10 px-2.5 py-1 font-semibold text-[#1B2A6B]">
+                      <div className="inline-flex items-center gap-2 rounded-lg bg-[#F5A623]/10 px-2.5 py-1.5 font-semibold text-[#1B2A6B]">
                         <KeyRound className="h-3.5 w-3.5" />
-                        {row.generatedPassword ?? "—"}
-                      </span>
+                        <PasswordReveal value={row.generatedPassword} />
+                      </div>
                     </td>
                     <td className="px-5 py-3.5 text-gray-600 whitespace-nowrap">
                       {new Date(row.updatedAt).toLocaleString("fr-FR")}
