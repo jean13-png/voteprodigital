@@ -22,20 +22,27 @@ export async function generateCandidateCredentials(formData: FormData) {
   }
 
   const includePdf = formData.get("includePdf") === "true" || formData.get("includePdf") === "on";
+  const scope = String(formData.get("scope") ?? "missing");
 
   const rows = await db
     .select({
       id: candidates.id,
       nom: candidates.nom,
       email: candidates.email,
+      password: candidates.password,
+      generatedPassword: candidates.generatedPassword,
     })
     .from(candidates)
     .where(isNotNull(candidates.email));
 
+  const eligibleRows = scope === "missing"
+    ? rows.filter((row) => !!row.email && (!row.password || !row.generatedPassword))
+    : rows.filter((row) => !!row.email);
+
   let generated = 0;
   let sent = 0;
 
-  for (const row of rows) {
+  for (const row of eligibleRows) {
     if (!row.email) continue;
 
     const password = generateRandomPassword();
@@ -62,5 +69,6 @@ export async function generateCandidateCredentials(formData: FormData) {
   }
 
   revalidatePath("/admin/dashboard");
-  redirect(`/admin/dashboard?credentials=generated&count=${generated}&sent=${sent}&pdf=${includePdf ? "1" : "0"}`);
+  revalidatePath("/admin/identifiants");
+  redirect(`/admin/dashboard?credentials=generated&count=${generated}&sent=${sent}&pdf=${includePdf ? "1" : "0"}&scope=${scope}`);
 }

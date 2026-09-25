@@ -71,7 +71,8 @@ export default async function AdminDashboard() {
               <FileText className="h-4 w-4" />
               Voir les identifiants
             </Link>
-            <form action={generateCandidateCredentials} className="flex items-center gap-3">
+            <form action={generateCandidateCredentials} className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <input type="hidden" name="scope" value="missing" />
               <label className="inline-flex items-center gap-2 text-sm text-slate-100">
                 <input type="checkbox" name="includePdf" value="true" className="h-4 w-4 rounded border-slate-300 text-[#F5A623] focus:ring-[#F5A623]" />
                 Inclure le PDF
@@ -81,7 +82,7 @@ export default async function AdminDashboard() {
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#F5A623] px-4 py-2.5 text-sm font-semibold text-[#1B2A6B] transition hover:bg-[#e59a12]"
               >
                 <Send className="h-4 w-4" />
-                Générer
+                Générer manquants
               </button>
             </form>
           </div>

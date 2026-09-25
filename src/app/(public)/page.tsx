@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getCandidatesCount, getCandidatesRankedPaginated } from "@/lib/db-queries";
 import CandidatsSection from "@/components/public/CandidatsSection";
-import Countdown from "@/components/public/Countdown";
+import HeroPromoSlider from "@/components/public/HeroPromoSlider";
 import { SOUTENANCE_DATE_FORMATTED } from "@/lib/constants";
 import { ArrowRight } from "lucide-react";
 
@@ -59,17 +59,9 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* Bloc countdown */}
+            {/* Bloc promo */}
             <div className="lg:shrink-0">
-              <div className="border border-white/10 bg-white/5 p-6 sm:p-8">
-                <p className="text-white/50 text-xs font-semibold uppercase tracking-widest mb-1">
-                  Soutenance dans
-                </p>
-                <p className="text-white font-bold text-sm mb-5">
-                  {SOUTENANCE_DATE_FORMATTED}
-                </p>
-                <Countdown />
-              </div>
+              <HeroPromoSlider />
             </div>
 
           </div>
