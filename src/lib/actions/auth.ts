@@ -69,7 +69,18 @@ export async function adminLogin(formData: FormData) {
 
     return { success: true };
   } catch (err) {
+    // NextAuth v5 lance une exception pour les identifiants incorrects
+    // au lieu de retourner { error }
     if (err instanceof AuthError) {
+      return { error: "Identifiant incorrect ou non autorisé." };
+    }
+    // Certaines versions lancent une erreur avec cause.type
+    if (
+      err instanceof Error &&
+      (err.message.includes("CredentialsSignin") ||
+        err.message.includes("credentials") ||
+        (err as any)?.type === "CredentialsSignin")
+    ) {
       return { error: "Identifiant incorrect ou non autorisé." };
     }
     console.error("adminLogin error:", err);
@@ -119,6 +130,14 @@ export async function candidateLogin(formData: FormData) {
     return { success: true };
   } catch (error) {
     if (error instanceof AuthError) {
+      return { error: "Email ou mot de passe incorrect." };
+    }
+    if (
+      error instanceof Error &&
+      (error.message.includes("CredentialsSignin") ||
+        error.message.includes("credentials") ||
+        (error as any)?.type === "CredentialsSignin")
+    ) {
       return { error: "Email ou mot de passe incorrect." };
     }
     return { error: "Erreur serveur." };
