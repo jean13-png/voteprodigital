@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 
-const STORAGE_KEY = "prodigital_offer_popup_closed_v1";
+const STORAGE_KEY = "prodigital_offer_popup_dismissed_until_v1";
+const POPUP_RESHOW_DELAY_MS = 12 * 60 * 60 * 1000;
 
 const variants = [
   {
@@ -73,10 +74,16 @@ export default function OfferPopup() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const dismissed = window.localStorage.getItem(STORAGE_KEY);
-    if (dismissed === "1") {
+    const dismissedUntil = Number(window.localStorage.getItem(STORAGE_KEY) ?? "0");
+    const shouldHide = Number.isFinite(dismissedUntil) && dismissedUntil > Date.now();
+
+    if (shouldHide) {
       setVisible(false);
       return;
+    }
+
+    if (dismissedUntil > 0) {
+      window.localStorage.removeItem(STORAGE_KEY);
     }
 
     const timer = window.setTimeout(() => {
@@ -93,7 +100,8 @@ export default function OfferPopup() {
 
   const handleClose = () => {
     setVisible(false);
-    window.localStorage.setItem(STORAGE_KEY, "1");
+    const dismissedUntil = Date.now() + POPUP_RESHOW_DELAY_MS;
+    window.localStorage.setItem(STORAGE_KEY, String(dismissedUntil));
   };
 
   if (!visible) return null;

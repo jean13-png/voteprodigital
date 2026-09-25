@@ -22,6 +22,24 @@ export default async function AdminIdentifiantsPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
+      <div className="mb-5 rounded-2xl border border-[#1B2A6B]/10 bg-white p-4 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 overflow-hidden rounded-xl bg-[#1B2A6B] p-1 shadow-sm ring-1 ring-[#1B2A6B]/10">
+            <img
+              src="/images/logo.jpeg"
+              alt="ProDigital Center"
+              className="h-full w-full rounded-lg object-cover"
+            />
+          </div>
+          <div>
+            <div className="text-lg font-black tracking-tight text-[#1B2A6B]">ProDigital Center</div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#F5A623]">
+              ProDigital • Admin
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <Link
