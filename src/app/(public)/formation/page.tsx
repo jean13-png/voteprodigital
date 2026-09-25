@@ -1,24 +1,26 @@
 const professionalTracks = [
   {
     name: "Formation professionnelle",
-    duration: "6 mois",
+    duration: "6 mois + 3 mois de stage",
     price: "100.000 FCFA",
-    note: "Avec 3 mois de stage inclus",
+    note: "La formation professionnelle standard, avec stage intégré pour une mise en pratique réelle.",
     bullets: [
       "Accompagnement pratique sur des projets concrets",
       "Méthodes de travail professionnelles et outils du numérique",
       "Préparation à l’insertion professionnelle",
+      "Stage de 3 mois pour consolider les compétences",
     ],
   },
   {
-    name: "Bourse / aide à la scolarité",
-    duration: "6 mois + stage",
-    price: "35.000.000 FCFA",
-    note: "Forfait boursier ou programme d’accompagnement spécifique",
+    name: "Bourse spéciale",
+    duration: "Offre prioritaire",
+    price: "35.000 FCFA",
+    note: "Le même programme, mais avec l’avantage d’une bourse spéciale qui réduit le coût à 35.000 FCFA.",
     bullets: [
+      "Accès à la même formation professionnelle",
+      "Aide financière pour rendre l’apprentissage plus accessible",
       "Suivi renforcé et accompagnement personnalisé",
-      "Accès à des modules avancés et à la mise en situation",
-      "Préparation à une insertion rapide dans le marché digital",
+      "Idéal pour les profils motivés et en quête d’opportunité",
     ],
   },
 ];

@@ -113,6 +113,19 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
   }),
 }));
 
+// ─── Table : formation_inscriptions ──────────────────────────────────────────
+
+export const formationInscriptions = pgTable("formation_inscriptions", {
+  id: serial("id").primaryKey(),
+  nom: varchar("nom", { length: 255 }).notNull(),
+  telephone: varchar("telephone", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }),
+  formation: varchar("formation", { length: 255 }).notNull(),
+  message: text("message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // ─── Types inférés ────────────────────────────────────────────────────────────
 
 export type User = typeof users.$inferSelect;
@@ -132,3 +145,6 @@ export type Domaine =
   | "ecommerce"
   | "audiovisuel"
   | "tout";
+
+export type FormationInscription = typeof formationInscriptions.$inferSelect;
+export type NewFormationInscription = typeof formationInscriptions.$inferInsert;

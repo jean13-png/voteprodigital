@@ -10,12 +10,14 @@ import {
   LogOut,
   GraduationCap,
   X,
+  BookOpen,
 } from "lucide-react";
 
 const navItems = [
   { href: "/admin/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/admin/votes", label: "Votes", icon: Vote },
   { href: "/admin/candidats", label: "Candidats", icon: Users },
+  { href: "/admin/inscriptions", label: "Inscriptions", icon: BookOpen },
 ];
 
 interface Props {

@@ -175,6 +175,97 @@ export async function sendPasswordResetEmail(email: string, token: string) {
   }
 }
 
+function generateCandidateCredentialsPDF({
+  nom,
+  email,
+  password,
+}: {
+  nom: string;
+  email: string;
+  password: string;
+}): Buffer {
+  const doc = new PDFDocument({ margin: 40 });
+  const buffers: Buffer[] = [];
+  doc.on("data", (chunk: Buffer) => buffers.push(chunk));
+
+  doc.fillColor("#1B2A6B").fontSize(22).font("Helvetica-Bold").text("Identifiants ProDigital Center", 40, 50);
+  doc.fillColor("#374151").fontSize(12).font("Helvetica").text("Bootcamp Digital Academy", 40, 82);
+
+  doc.moveDown(2);
+  doc.fillColor("#111827").fontSize(12).font("Helvetica-Bold").text("Nom :", 40, 130)
+    .font("Helvetica").text(nom, 180, 130);
+  doc.font("Helvetica-Bold").text("Email :", 40, 155)
+    .font("Helvetica").text(email, 180, 155);
+  doc.font("Helvetica-Bold").text("Mot de passe :", 40, 180)
+    .font("Helvetica").text(password, 180, 180);
+
+  doc.fillColor("#F5A623").fontSize(11).font("Helvetica-Bold").text("Attention : changez votre mot de passe lors de votre première connexion.", 40, 230, { width: 500 });
+  doc.fillColor("#6b7280").fontSize(10).font("Helvetica").text("ProDigital Center — Accès étudiant", 40, 310, { align: "center" });
+
+  doc.end();
+  return Buffer.concat(buffers);
+}
+
+export async function sendCandidateCredentialsEmail({
+  nom,
+  email,
+  password,
+  includePdf = false,
+}: {
+  nom: string;
+  email: string;
+  password: string;
+  includePdf?: boolean;
+}) {
+  if (!isEmailConfigured()) return;
+  if (!isValidEmail(email)) throw new Error("Format email invalide");
+
+  try {
+    const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+    const attachment = includePdf
+      ? [{ filename: `identifiants_${nom.replace(/\s+/g, "_").toLowerCase()}.pdf`, content: generateCandidateCredentialsPDF({ nom, email, password }) }]
+      : undefined;
+
+    await sendEmail({
+      to: email,
+      subject: "Vos identifiants ProDigital Center",
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #1B2A6B; padding: 24px; border-radius: 12px 12px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 20px;">Vos identifiants d’accès</h1>
+            <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0; font-size: 14px;">Bootcamp Digital Academy — ProDigital Center</p>
+          </div>
+          <div style="background: white; padding: 24px; border: 1px solid #e5e7eb; border-top: none;">
+            <p style="font-size: 14px; color: #374151; margin: 0 0 14px;">Bonjour <strong>${nom}</strong>,</p>
+            <p style="font-size: 14px; color: #374151; margin: 0 0 18px;">Voici les identifiants qui vous permettent d’accéder à votre espace étudiant.</p>
+            <table style="width: 100%; border-collapse: collapse; background: #f9fafb; border: 1px solid #e5e7eb; margin-bottom: 18px;">
+              <tr>
+                <td style="padding: 12px; color: #6b7280; font-size: 14px; width: 140px;">Email</td>
+                <td style="padding: 12px; font-size: 14px; font-weight: 600; color: #111827;">${email}</td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; color: #6b7280; font-size: 14px;">Mot de passe</td>
+                <td style="padding: 12px; font-size: 14px; font-weight: 700; color: #1B2A6B;">${password}</td>
+              </tr>
+            </table>
+            <div style="margin-top: 20px;">
+              <a href="${baseUrl}/candidat/login" style="display: inline-block; background: #F5A623; color: #1B2A6B; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 700;">Se connecter</a>
+            </div>
+            <p style="font-size: 12px; color: #6b7280; margin-top: 18px;">Pour votre sécurité, veuillez modifier votre mot de passe lors de votre première connexion.</p>
+          </div>
+          <div style="background: #f9fafb; padding: 16px; border-radius: 0 0 12px 12px; border: 1px solid #e5e7eb; border-top: none; text-align: center;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">ProDigital Center &copy; ${new Date().getFullYear()}</p>
+          </div>
+        </div>
+      `,
+      attachments: attachment,
+    });
+  } catch (err) {
+    logError("Email sendCandidateCredentialsEmail", err);
+    throw err;
+  }
+}
+
 // ─── Récépissé de vote avec PDF joint ────────────────────────────────────────
 
 export interface VoteReceiptData {

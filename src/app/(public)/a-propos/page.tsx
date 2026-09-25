@@ -92,12 +92,24 @@ export default function AboutPage() {
 
       <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-10 shadow-sm">
         <section className="mb-12">
-          <h2 className="text-2xl font-bold text-[#1B2A6B] mb-4">Centre Numérique ProDigital</h2>
-          <p className="text-base leading-8 text-slate-700">
-            Devenir un pôle d’excellence en formation digitale, en services numériques et
-            en entrepreneuriat, contribuant activement à la transformation digitale des
-            entreprises et à l’émergence de leaders africains.
-          </p>
+          <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_0.9fr] gap-6 items-center">
+            <div>
+              <h2 className="text-2xl font-bold text-[#1B2A6B] mb-4">Centre Numérique ProDigital</h2>
+              <p className="text-base leading-8 text-slate-700">
+                Devenir un pôle d’excellence en formation digitale, en services numériques et
+                en entrepreneuriat, contribuant activement à la transformation digitale des
+                entreprises et à l’émergence de leaders africains.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="overflow-hidden border border-slate-200 bg-slate-100 h-32">
+                <img src="/images/logo.jpeg" alt="ProDigital Center" className="h-full w-full object-cover" />
+              </div>
+              <div className="overflow-hidden border border-slate-200 bg-slate-100 h-32">
+                <img src="/images/logo.jpeg" alt="ProDigital Academy" className="h-full w-full object-cover grayscale" />
+              </div>
+            </div>
+          </div>
         </section>
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
@@ -251,6 +263,50 @@ export default function AboutPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        <section className="mt-14 border-t border-slate-200 pt-10">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-8 items-start">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#F5A623] mb-2">
+                Contact
+              </p>
+              <h3 className="text-2xl font-bold text-[#1B2A6B] mb-4">Parlons de votre projet</h3>
+              <p className="text-sm leading-7 text-slate-700 mb-6">
+                Que vous soyez une entreprise, une organisation ou une personne souhaitant se former,
+                nous sommes à votre disposition pour vous conseiller et vous accompagner.
+              </p>
+              <div className="space-y-3 text-sm text-slate-700">
+                <p><span className="font-semibold text-[#1B2A6B]">Email :</span> contact@prodigitalcenter.com</p>
+                <p><span className="font-semibold text-[#1B2A6B]">Téléphone :</span> +229 51 59 55 23</p>
+                <p><span className="font-semibold text-[#1B2A6B]">Adresse :</span> Cotonou, Bénin</p>
+              </div>
+            </div>
+
+            <form className="border border-slate-200 bg-slate-50 p-5 space-y-4">
+              <div>
+                <label htmlFor="contact-name" className="mb-2 block text-sm font-medium text-slate-700">
+                  Nom
+                </label>
+                <input id="contact-name" type="text" className="w-full border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none focus:border-[#1B2A6B]" placeholder="Votre nom" />
+              </div>
+              <div>
+                <label htmlFor="contact-email" className="mb-2 block text-sm font-medium text-slate-700">
+                  Email
+                </label>
+                <input id="contact-email" type="email" className="w-full border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none focus:border-[#1B2A6B]" placeholder="votre@email.com" />
+              </div>
+              <div>
+                <label htmlFor="contact-message" className="mb-2 block text-sm font-medium text-slate-700">
+                  Message
+                </label>
+                <textarea id="contact-message" rows={4} className="w-full border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none focus:border-[#1B2A6B]" placeholder="Votre message..." />
+              </div>
+              <button type="button" className="inline-flex items-center justify-center bg-[#1B2A6B] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#162058]">
+                Envoyer le message
+              </button>
+            </form>
           </div>
         </section>
       </div>

@@ -66,7 +66,7 @@ export default async function Footer() {
   return (
     <footer className="bg-[#1B2A6B] text-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 xl:gap-10">
 
           {/* Colonne 1 : logo + description */}
           <div>

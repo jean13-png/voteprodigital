@@ -111,9 +111,6 @@ export default function CandidatLoginPage() {
           <Link href="/candidat/mot-de-passe-oublie" className="text-sm text-[#1B2A6B] hover:underline block">
             Mot de passe oublié ?
           </Link>
-          <Link href="/candidat/inscription" className="text-sm text-[#1B2A6B] hover:underline block">
-            Créer un compte
-          </Link>
           <Link href="/" className="text-sm text-[#1B2A6B] hover:underline block">
             Retour au site
           </Link>

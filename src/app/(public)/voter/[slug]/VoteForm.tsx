@@ -17,7 +17,7 @@ export default function VoteForm({ candidatId, candidatSlug }: VoteFormProps) {
   const router = useRouter();
   // const fileInputRef = useRef<HTMLInputElement>(null); // MODE MANUEL DÉSACTIVÉ
 
-  const [nombreVotes, setNombreVotes] = useState<number | "">(1);
+  const [nombreVotes, setNombreVotes] = useState<number | "">(2);
   // const [previewUrl, setPreviewUrl] = useState<string | null>(null); // MODE MANUEL DÉSACTIVÉ
   // const [previewFile, setPreviewFile] = useState<File | null>(null); // MODE MANUEL DÉSACTIVÉ
   const [loading, setLoading] = useState(false);
@@ -44,8 +44,8 @@ export default function VoteForm({ candidatId, candidatSlug }: VoteFormProps) {
     }
     if (data.nombreVotes === "" || data.nombreVotes === null || data.nombreVotes === undefined) {
       errs.nombreVotes = "Veuillez entrer un nombre de votes.";
-    } else if (!Number.isInteger(data.nombreVotes) || data.nombreVotes < 1) {
-      errs.nombreVotes = "Le nombre de votes doit être au moins 1.";
+    } else if (!Number.isInteger(data.nombreVotes) || data.nombreVotes < 2) {
+      errs.nombreVotes = "Le nombre de votes doit être au moins 2 (100 FCFA minimum).";
     } else if (data.nombreVotes > 100) {
       errs.nombreVotes = "Maximum 100 votes par transaction.";
     }
@@ -170,7 +170,7 @@ export default function VoteForm({ candidatId, candidatSlug }: VoteFormProps) {
           <input
             name="nombreVotes"
             type="number"
-            min={1}
+            min={2}
             max={100}
             value={nombreVotes}
             onChange={(e) => {
@@ -182,6 +182,9 @@ export default function VoteForm({ candidatId, candidatSlug }: VoteFormProps) {
                 const parsed = parseInt(val);
                 if (isNaN(parsed)) {
                   setErrors((p) => ({ ...p, nombreVotes: "Nombre invalide." }));
+                } else if (parsed < 2) {
+                  setNombreVotes(2);
+                  setErrors((p) => ({ ...p, nombreVotes: "" }));
                 } else if (parsed > 100) {
                   setNombreVotes(100);
                   setErrors((p) => ({ ...p, nombreVotes: "" }));
@@ -197,7 +200,7 @@ export default function VoteForm({ candidatId, candidatSlug }: VoteFormProps) {
         </div>
         {errors.nombreVotes && <p className="mt-1 text-xs text-red-600">{errors.nombreVotes}</p>}
         <div className="flex flex-wrap gap-2 mt-2">
-          {[1, 5, 10, 20, 50, 100].map((n) => (
+          {[2, 5, 10, 20, 50, 100].map((n) => (
             <button
               key={n}
               type="button"

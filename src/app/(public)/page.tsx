@@ -56,12 +56,6 @@ export default async function HomePage() {
                 >
                   Découvrir ProDigital
                 </Link>
-                <Link
-                  href="#comment-voter"
-                  className="w-full sm:w-auto border border-white/30 hover:border-white/60 text-white font-semibold px-6 py-3 transition-colors text-center"
-                >
-                  Comment voter ?
-                </Link>
               </div>
             </div>
 
@@ -131,7 +125,7 @@ export default async function HomePage() {
               {
                 num: "02",
                 title: "Choisissez le nombre de votes",
-                desc: "1 vote = 50 FCFA. Vous pouvez acheter autant de votes que vous voulez.",
+                desc: "Le minimum est de 2 votes (100 FCFA), pour éviter les paiements rejetés par FedaPay.",
               },
               {
                 num: "03",
