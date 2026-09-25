@@ -31,6 +31,7 @@ export async function getCandidatesRanked(limit?: number) {
       projectVideoUrl: candidates.projectVideoUrl,
       projectImage: candidates.projectImage,
       projectPosterImage: candidates.projectPosterImage,
+      projectLinks: candidates.projectLinks,
       actif: candidates.actif,
       totalVotes: sql<number>`COALESCE(SUM(CASE WHEN ${votes.statut} = 'valide' THEN ${votes.nombreVotes} ELSE 0 END), 0)`.as(
         "total_votes"
@@ -88,6 +89,7 @@ export async function getCandidatesRankedPaginated(options: {
         projectVideoUrl: candidates.projectVideoUrl,
         projectImage: candidates.projectImage,
         projectPosterImage: candidates.projectPosterImage,
+        projectLinks: candidates.projectLinks,
         actif: candidates.actif,
         totalVotes: sql<number>`COALESCE(SUM(CASE WHEN ${votes.statut} = 'valide' THEN ${votes.nombreVotes} ELSE 0 END), 0)`.as("total_votes"),
       })
@@ -135,6 +137,7 @@ export async function getCandidateBySlug(slug: string) {
       projectVideoUrl: candidates.projectVideoUrl,
       projectImage: candidates.projectImage,
       projectPosterImage: candidates.projectPosterImage,
+      projectLinks: candidates.projectLinks,
       actif: candidates.actif,
       totalVotes: sql<number>`COALESCE(SUM(CASE WHEN ${votes.statut} = 'valide' THEN ${votes.nombreVotes} ELSE 0 END), 0)`.as(
         "total_votes"

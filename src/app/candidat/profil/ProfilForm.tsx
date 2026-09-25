@@ -17,6 +17,7 @@ interface Props {
     projectVideoUrl?: string;
     projectImage?: string;
     projectPosterImage?: string;
+    projectLinks?: string;
   };
 }
 
@@ -43,6 +44,7 @@ export default function ProfilForm({ candidatId, defaultValues }: Props) {
       projectVideoUrl: getValue("projectVideoUrl"),
       projectImage: getValue("projectImage"),
       projectPosterImage: getValue("projectPosterImage"),
+      projectLinks: getValue("projectLinks"),
       id: String(candidatId),
     };
 
@@ -111,6 +113,17 @@ export default function ProfilForm({ candidatId, defaultValues }: Props) {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Affiche / visuel principal</label>
             <input name="projectPosterImage" defaultValue={defaultValues.projectPosterImage ?? ""} placeholder="https://..." className={inputClass} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Liens du projet</label>
+            <textarea
+              name="projectLinks"
+              defaultValue={defaultValues.projectLinks ?? ""}
+              rows={4}
+              className={`${inputClass} resize-none`}
+              placeholder={'YouTube | https://youtube.com/watch?v=...\nFacebook | https://facebook.com/...\nPortfolio | https://...'}
+            />
+            <p className="text-xs text-gray-400 mt-1">Un lien par ligne au format: Libellé | URL</p>
           </div>
         </div>
       </div>

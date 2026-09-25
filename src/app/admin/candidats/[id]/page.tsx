@@ -37,6 +37,12 @@ export default async function EditCandidatPage({
             bio: candidat.bio ?? "",
             domaine: candidat.domaine,
             videoUrl: candidat.videoUrl ?? "",
+            projectTitle: candidat.projectTitle ?? "",
+            projectDescription: candidat.projectDescription ?? "",
+            projectVideoUrl: candidat.projectVideoUrl ?? "",
+            projectImage: candidat.projectImage ?? "",
+            projectPosterImage: candidat.projectPosterImage ?? "",
+            projectLinks: candidat.projectLinks ?? "",
             photo: candidat.photo ?? "",
             actif: candidat.actif,
           }}

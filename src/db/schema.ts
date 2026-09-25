@@ -58,6 +58,7 @@ export const candidates = pgTable("candidates", {
   projectVideoUrl: text("project_video_url"),
   projectImage: text("project_image"),
   projectPosterImage: text("project_poster_image"),
+  projectLinks: text("project_links"),
   actif: boolean("actif").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

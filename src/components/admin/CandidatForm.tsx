@@ -16,6 +16,12 @@ interface CandidatFormProps {
     bio?: string;
     domaine?: string;
     videoUrl?: string;
+    projectTitle?: string;
+    projectDescription?: string;
+    projectVideoUrl?: string;
+    projectImage?: string;
+    projectPosterImage?: string;
+    projectLinks?: string;
     photo?: string | null;
     actif?: boolean;
   };
@@ -69,6 +75,12 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
       formData.append("bio", getValue("bio"));
       formData.append("domaine", getValue("domaine"));
       formData.append("videoUrl", getValue("videoUrl"));
+      formData.append("projectTitle", getValue("projectTitle"));
+      formData.append("projectDescription", getValue("projectDescription"));
+      formData.append("projectVideoUrl", getValue("projectVideoUrl"));
+      formData.append("projectImage", getValue("projectImage"));
+      formData.append("projectPosterImage", getValue("projectPosterImage"));
+      formData.append("projectLinks", getValue("projectLinks"));
       const password = getValue("password");
       if (password) formData.append("password", password);
       if (photoFile) formData.append("photo", photoFile);
@@ -297,6 +309,45 @@ export default function CandidatForm({ mode, defaultValues = {} }: CandidatFormP
           placeholder="Décrivez le candidat : son parcours, son projet, ses motivations..."
           className={`${inputClass} resize-none`}
         />
+      </div>
+
+      <div className="border-t border-gray-100 pt-5">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+          Projet du candidat
+        </p>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Titre du projet</label>
+            <input name="projectTitle" defaultValue={defaultValues.projectTitle ?? ""} placeholder="Nom du projet" className={inputClass} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Description du projet</label>
+            <textarea name="projectDescription" defaultValue={defaultValues.projectDescription ?? ""} rows={4} placeholder="Décrivez le projet, son objectif, la solution, le public cible..." className={`${inputClass} resize-none`} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Vidéo YouTube</label>
+            <input name="projectVideoUrl" type="url" defaultValue={defaultValues.projectVideoUrl ?? ""} placeholder="https://youtube.com/watch?v=..." className={inputClass} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Image du projet</label>
+            <input name="projectImage" defaultValue={defaultValues.projectImage ?? ""} placeholder="https://..." className={inputClass} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Affiche / visuel principal</label>
+            <input name="projectPosterImage" defaultValue={defaultValues.projectPosterImage ?? ""} placeholder="https://..." className={inputClass} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Liens du projet</label>
+            <textarea
+              name="projectLinks"
+              defaultValue={defaultValues.projectLinks ?? ""}
+              rows={4}
+              className={`${inputClass} resize-none`}
+              placeholder={'YouTube | https://youtube.com/watch?v=...\nFacebook | https://facebook.com/...\nPortfolio | https://...'}
+            />
+            <p className="text-xs text-gray-400 mt-1">Un lien par ligne au format: Libellé | URL</p>
+          </div>
+        </div>
       </div>
 
       {/* Actions */}

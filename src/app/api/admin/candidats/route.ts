@@ -28,9 +28,21 @@ export async function POST(req: NextRequest) {
     const bio = bioRaw || null;
     const videoUrlRaw = (formData.get("videoUrl") as string)?.trim();
     const videoUrl = videoUrlRaw || null;
+    const projectTitleRaw = (formData.get("projectTitle") as string)?.trim();
+    const projectTitle = projectTitleRaw || null;
+    const projectDescriptionRaw = (formData.get("projectDescription") as string)?.trim();
+    const projectDescription = projectDescriptionRaw || null;
+    const projectVideoUrlRaw = (formData.get("projectVideoUrl") as string)?.trim();
+    const projectVideoUrl = projectVideoUrlRaw || null;
+    const projectImageRaw = (formData.get("projectImage") as string)?.trim();
+    const projectImage = projectImageRaw || null;
+    const projectPosterImageRaw = (formData.get("projectPosterImage") as string)?.trim();
+    const projectPosterImage = projectPosterImageRaw || null;
+    const projectLinksRaw = (formData.get("projectLinks") as string)?.trim();
+    const projectLinks = projectLinksRaw || null;
     const photoFile = formData.get("photo") as File | null;
     
-    console.log("[POST /api/admin/candidats-simple] Données:", { nom, slug, domaine, hasPhoto: !!photoFile });
+    console.log("[POST /api/admin/candidats-simple] Données:", { nom, slug, domaine, hasPhoto: !!photoFile, projectTitle });
     
     if (!nom || !slug || !domaine) {
       return NextResponse.json({ error: "Champs obligatoires manquants" }, { status: 400 });
@@ -71,6 +83,12 @@ export async function POST(req: NextRequest) {
       domaine: domaine as any,
       bio,
       videoUrl,
+      projectTitle,
+      projectDescription,
+      projectVideoUrl,
+      projectImage,
+      projectPosterImage,
+      projectLinks,
       photo: photoUrl,
       actif: true,
     }).returning();

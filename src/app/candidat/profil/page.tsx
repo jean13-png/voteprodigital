@@ -38,6 +38,7 @@ export default async function CandidatProfilPage() {
               projectVideoUrl: candidat.projectVideoUrl ?? "",
               projectImage: candidat.projectImage ?? "",
               projectPosterImage: candidat.projectPosterImage ?? "",
+              projectLinks: candidat.projectLinks ?? "",
             }}
           />
         </div>

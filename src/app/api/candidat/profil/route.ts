@@ -22,6 +22,7 @@ export async function PUT(req: NextRequest) {
       projectVideoUrl,
       projectImage,
       projectPosterImage,
+      projectLinks,
       oldPassword,
       newPassword,
     } = body;
@@ -45,6 +46,7 @@ export async function PUT(req: NextRequest) {
       projectVideoUrl: projectVideoUrl?.trim() || null,
       projectImage: projectImage?.trim() || null,
       projectPosterImage: projectPosterImage?.trim() || null,
+      projectLinks: projectLinks?.trim() || null,
       updatedAt: new Date(),
     };
 

@@ -29,6 +29,12 @@ export async function PUT(
     const bio = (formData.get("bio") as string)?.trim() || null;
     const domaine = formData.get("domaine") as string;
     const videoUrl = (formData.get("videoUrl") as string)?.trim() || null;
+    const projectTitle = (formData.get("projectTitle") as string)?.trim() || null;
+    const projectDescription = (formData.get("projectDescription") as string)?.trim() || null;
+    const projectVideoUrl = (formData.get("projectVideoUrl") as string)?.trim() || null;
+    const projectImage = (formData.get("projectImage") as string)?.trim() || null;
+    const projectPosterImage = (formData.get("projectPosterImage") as string)?.trim() || null;
+    const projectLinks = (formData.get("projectLinks") as string)?.trim() || null;
     const photoFile = formData.get("photo") as File | null;
 
     const updateData: Record<string, unknown> = {
@@ -38,6 +44,12 @@ export async function PUT(
       bio,
       domaine,
       videoUrl,
+      projectTitle,
+      projectDescription,
+      projectVideoUrl,
+      projectImage,
+      projectPosterImage,
+      projectLinks,
       updatedAt: new Date(),
     };
 

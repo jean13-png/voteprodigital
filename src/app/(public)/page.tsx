@@ -24,8 +24,8 @@ export default async function HomePage() {
           <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-[#F5A623] translate-y-1/2 -translate-x-1/2" />
         </div>
 
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-10">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-4 pb-12 sm:pt-6 sm:pb-14">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
 
             {/* Texte */}
             <div className="lg:max-w-xl">

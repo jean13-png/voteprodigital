@@ -12,6 +12,28 @@ function getYouTubeId(url: string | null): string | null {
   return match?.[1] ?? null;
 }
 
+function parseProjectLinks(value: string | null): Array<{ label: string; url: string }> {
+  if (!value) return [];
+
+  return value
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const separatorIndex = line.indexOf("|");
+      if (separatorIndex !== -1) {
+        const label = line.slice(0, separatorIndex).trim();
+        const url = line.slice(separatorIndex + 1).trim();
+        if (label && url) return { label, url };
+      }
+
+      const match = line.match(/^(https?:\/\/\S+)$/i);
+      if (match) return { label: "Lien du projet", url: match[1] };
+      return null;
+    })
+    .filter((item): item is { label: string; url: string } => Boolean(item));
+}
+
 export default async function CandidatProjetPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const candidat = await getCandidateBySlug(slug);
@@ -22,6 +44,7 @@ export default async function CandidatProjetPage({ params }: { params: Promise<{
   const projectDescription = candidat.projectDescription || "Le candidat n'a pas encore publié sa présentation de projet.";
   const youtubeId = getYouTubeId(candidat.projectVideoUrl ?? candidat.videoUrl ?? null);
   const projectImage = candidat.projectImage || candidat.projectPosterImage || candidat.photo;
+  const projectLinks = parseProjectLinks(candidat.projectLinks);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
@@ -74,6 +97,23 @@ export default async function CandidatProjetPage({ params }: { params: Promise<{
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
+
+              {projectLinks.length > 0 && (
+                <div className="mt-5 space-y-2">
+                  {projectLinks.map((link) => (
+                    <a
+                      key={`${link.label}-${link.url}`}
+                      href={link.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex w-full items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/85 hover:bg-white/10 hover:text-white transition-colors"
+                    >
+                      <span className="truncate">{link.label}</span>
+                      <ArrowRight className="w-4 h-4 shrink-0 text-[#F5A623]" />
+                    </a>
+                  ))}
+                </div>
+              )}
 
               {candidat.projectVideoUrl && (
                 <a href={candidat.projectVideoUrl} target="_blank" rel="noreferrer" className="inline-flex mt-4 items-center gap-2 text-sm text-white/80 hover:text-white">

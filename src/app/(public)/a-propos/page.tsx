@@ -177,6 +177,34 @@ export default function AboutPage({
         </section>
 
         <section className="mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+              <img
+                src="/images/debuter-en-programmation.jpg"
+                alt="Formation professionnelle en programmation"
+                className="h-56 w-full object-cover"
+              />
+              <div className="p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#F5A623] mb-2">Academy</p>
+                <h4 className="text-lg font-bold text-[#1B2A6B]">Former les talents du numérique</h4>
+              </div>
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+              <img
+                src="/images/ia_informatique.jpg"
+                alt="Innovation numérique et intelligence artificielle"
+                className="h-56 w-full object-cover"
+              />
+              <div className="p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#F5A623] mb-2">Agency</p>
+                <h4 className="text-lg font-bold text-[#1B2A6B]">Créer des solutions qui font grandir les entreprises</h4>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mb-12">
           <h3 className="text-xl font-bold text-[#1B2A6B] mb-5">Domaines numériques</h3>
           <div className="flex gap-3 overflow-x-auto pb-2 lg:flex-nowrap">
             {domains.map((domain) => (
