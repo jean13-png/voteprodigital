@@ -52,7 +52,7 @@ export default function HeroPromoSlider() {
       <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-white/5 to-white/10 shadow-lg shadow-[#0f1d5b]/20 backdrop-blur-sm">
         <div className="relative h-52 w-full overflow-hidden">
           <img
-            src="/images/ia_infrmatique"
+            src="/images/ia_informatique.jpg"
             alt="Apprenants et professionnels en formation digitale"
             className="h-full w-full object-cover"
           />
