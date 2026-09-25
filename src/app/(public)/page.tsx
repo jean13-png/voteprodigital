@@ -51,6 +51,12 @@ export default async function HomePage() {
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
+                  href="/a-propos"
+                  className="w-full sm:w-auto border border-white/30 hover:border-white/60 text-white font-semibold px-6 py-3 transition-colors text-center"
+                >
+                  Découvrir ProDigital
+                </Link>
+                <Link
                   href="#comment-voter"
                   className="w-full sm:w-auto border border-white/30 hover:border-white/60 text-white font-semibold px-6 py-3 transition-colors text-center"
                 >

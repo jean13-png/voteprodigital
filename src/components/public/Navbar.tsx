@@ -9,6 +9,8 @@ import Image from "next/image";
 const navLinks = [
   { href: "/", label: "Accueil" },
   { href: "/candidats", label: "Candidats" },
+  { href: "/a-propos", label: "À propos" },
+  { href: "/formation", label: "Formation" },
 ];
 
 export default function Navbar() {

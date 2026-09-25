@@ -41,6 +41,8 @@ const socialLinks = [
 const quickLinks = [
   { href: "/", label: "Accueil" },
   { href: "/candidats", label: "Les candidats" },
+  { href: "/a-propos", label: "À propos" },
+  { href: "/formation", label: "Formation" },
   { href: "/candidat/login", label: "Espace candidat" },
 ];
 
