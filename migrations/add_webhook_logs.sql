@@ -13,8 +13,3 @@ CREATE TABLE IF NOT EXISTS webhook_logs (
   error TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- Index pour les requêtes fréquentes
-CREATE INDEX IF NOT EXISTS idx_webhook_logs_created_at ON webhook_logs(created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_webhook_logs_event ON webhook_logs(event);
-CREATE INDEX IF NOT EXISTS idx_webhook_logs_status ON webhook_logs(status);

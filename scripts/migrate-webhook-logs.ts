@@ -5,8 +5,11 @@
  */
 
 import { neon } from "@neondatabase/serverless";
-import fs from "fs";
+import dotenv from "dotenv";
 import path from "path";
+
+// Charger les variables d'environnement
+dotenv.config({ path: path.join(__dirname, "../.env.local") });
 
 async function migrate() {
   if (!process.env.DATABASE_URL) {
@@ -18,29 +21,38 @@ async function migrate() {
   const sql = neon(process.env.DATABASE_URL);
   
   try {
-    // Lire le fichier SQL
-    const migrationPath = path.join(__dirname, "../migrations/add_webhook_logs.sql");
-    const migrationSQL = fs.readFileSync(migrationPath, "utf-8");
+    // Créer la table
+    console.log("⏳ Création de la table webhook_logs...");
+    await sql.query(`
+      CREATE TABLE IF NOT EXISTS webhook_logs (
+        id SERIAL PRIMARY KEY,
+        event VARCHAR(100) NOT NULL,
+        status INTEGER NOT NULL,
+        signature_received TEXT,
+        signature_format VARCHAR(50),
+        signature_valid BOOLEAN,
+        payload TEXT,
+        error TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log("✓ Table créée");
     
-    console.log("✅ Migration SQL chargée");
+    // Ajouter les indexes
+    console.log("⏳ Ajout des indexes...");
+    await sql.query("CREATE INDEX IF NOT EXISTS idx_webhook_logs_created_at ON webhook_logs(created_at DESC)");
+    console.log("✓ Index created_at créé");
     
-    // Exécuter les requêtes (séparées par point-virgule)
-    const queries = migrationSQL
-      .split(";")
-      .map(q => q.trim())
-      .filter(q => q.length > 0);
+    await sql.query("CREATE INDEX IF NOT EXISTS idx_webhook_logs_event ON webhook_logs(event)");
+    console.log("✓ Index event créé");
     
-    for (const query of queries) {
-      console.log(`⏳ Exécution: ${query.substring(0, 50)}...`);
-      await sql(query);
-      console.log("✓ Succès");
-    }
+    await sql.query("CREATE INDEX IF NOT EXISTS idx_webhook_logs_status ON webhook_logs(status)");
+    console.log("✓ Index status créé");
     
     console.log("🎉 Migration terminée avec succès!");
-    console.log("📝 Table webhook_logs créée");
     
     // Vérifier que la table existe
-    const result = await sql(
+    const result = await sql.query(
       "SELECT table_name FROM information_schema.tables WHERE table_name = 'webhook_logs'"
     );
     
