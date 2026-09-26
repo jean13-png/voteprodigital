@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, votes } from "@/db";
 import { eq } from "drizzle-orm";
-import { getSession } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { logError } from "@/lib/log-error";
 import { auditLog } from "@/lib/audit-log";
 
