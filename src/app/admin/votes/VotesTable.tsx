@@ -221,6 +221,21 @@ export default function VotesTable({ data, currentStatut, currentSearch }: Props
                           </button>
                         </div>
                       )}
+                      {v.statut === "refuse" && (
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleAction(v, "valider")}
+                            disabled={loadingId === v.id}
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Bouton temporaire pour corriger les votes refusés à tort"
+                          >
+                            {loadingId === v.id
+                              ? <Loader2 className="w-3 h-3 animate-spin" />
+                              : <CheckCircle className="w-3 h-3" />}
+                            Corriger
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))
