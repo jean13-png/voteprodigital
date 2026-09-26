@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Search, CheckCircle, XCircle, Loader2, Image as ImageIcon } from "lucide-react";
+import { Search, CheckCircle, XCircle, Loader2, Image as ImageIcon, Trash2 } from "lucide-react";
 import { swalConfirm, swalToast, swalError } from "@/lib/swal";
 import { csrfFetch } from "@/lib/csrf";
 
@@ -107,6 +107,27 @@ export default function VotesTable({ data, currentStatut, currentSearch }: Props
         ? `Vote validé — ${vote.nombreVotes} vote(s) crédités à ${vote.candidatNom}`
         : `Vote de ${vote.nomVotant} refusé.`
     );
+    router.refresh();
+  }
+
+  async function handleDelete(vote: VoteRow) {
+    const result = await swalConfirm(
+      "Supprimer ce vote ?",
+      `Le vote de ${vote.nomVotant} (${vote.nombreVotes} vote(s)) sera définitivement supprimé.`,
+      "Supprimer"
+    );
+    if (!result.isConfirmed) return;
+
+    setLoadingId(vote.id);
+    const res = await csrfFetch(`/api/admin/votes/${vote.id}/delete`, { method: "DELETE" });
+    setLoadingId(null);
+
+    if (!res.ok) {
+      await swalError("Erreur", "La suppression a échoué. Réessayez.");
+      return;
+    }
+
+    swalToast("success", `Vote de ${vote.nomVotant} supprimé.`);
     router.refresh();
   }
 
@@ -219,6 +240,17 @@ export default function VotesTable({ data, currentStatut, currentSearch }: Props
                             <XCircle className="w-3 h-3" />
                             Refuser
                           </button>
+                          <button
+                            onClick={() => handleDelete(v)}
+                            disabled={loadingId === v.id}
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Bouton temporaire pour supprimer les votes de test"
+                          >
+                            {loadingId === v.id
+                              ? <Loader2 className="w-3 h-3 animate-spin" />
+                              : <Trash2 className="w-3 h-3" />}
+                            Supprimer
+                          </button>
                         </div>
                       )}
                       {v.statut === "refuse" && (
@@ -233,6 +265,17 @@ export default function VotesTable({ data, currentStatut, currentSearch }: Props
                               ? <Loader2 className="w-3 h-3 animate-spin" />
                               : <CheckCircle className="w-3 h-3" />}
                             Corriger
+                          </button>
+                          <button
+                            onClick={() => handleDelete(v)}
+                            disabled={loadingId === v.id}
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Bouton temporaire pour supprimer les votes de test"
+                          >
+                            {loadingId === v.id
+                              ? <Loader2 className="w-3 h-3 animate-spin" />
+                              : <Trash2 className="w-3 h-3" />}
+                            Supprimer
                           </button>
                         </div>
                       )}
