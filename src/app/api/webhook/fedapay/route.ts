@@ -9,7 +9,8 @@ export const runtime = "nodejs";
 
 function verifyFedaPaySignature(payload: string, signature: string, secret: string): boolean {
   try {
-    const expected = createHmac("sha256", secret).update(payload).digest("hex");
+    // FedaPay envoie la signature en base64, donc on doit comparer en base64
+    const expected = createHmac("sha256", secret).update(payload).digest("base64");
     return expected === signature;
   } catch {
     return false;
