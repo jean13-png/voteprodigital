@@ -52,9 +52,9 @@ Configure un timeout de 30 secondes pour le webhook (au lieu de 10s par défaut)
 ### 1. Vérifier les variables d'environnement sur Vercel
 
 ```bash
-FEDAPAY_SECRET_KEY=sk_live_3KyG5_jI3QsfFqon1WzIDd8z
+FEDAPAY_SECRET_KEY=VOTRE_CLE_LIVE_ICI
 FEDAPAY_MODE=live
-FEDAPAY_WEBHOOK_SECRET=wh_live_TtJCFuztRYwwS4LXgut5Z3wy
+FEDAPAY_WEBHOOK_SECRET=VOTRE_SECRET_WEBHOOK_ICI
 NEXTAUTH_URL=https://voteprodigital.vercel.app
 ```
 
@@ -105,7 +105,7 @@ Ou dans le dashboard Vercel → votre projet → Logs
 
 ```bash
 curl -X GET "https://api.fedapay.com/v1/transactions/TRANSACTION_ID" \
-  -H "Authorization: Bearer sk_live_3KyG5_jI3QsfFqon1WzIDd8z" \
+  -H "Authorization: Bearer VOTRE_CLE_SECRETE_ICI" \
   -H "X-Version: 1.1.1"
 ```
 

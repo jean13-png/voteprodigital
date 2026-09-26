@@ -126,7 +126,7 @@ vercel logs --follow
 
 # 3. Vérifier manuellement le statut d'une transaction
 curl -X GET "https://api.fedapay.com/v1/transactions/TRANSACTION_ID" \
-  -H "Authorization: Bearer sk_live_3KyG5_jI3QsfFqon1WzIDd8z" \
+  -H "Authorization: Bearer VOTRE_CLE_SECRETE_ICI" \
   -H "X-Version: 1.1.1" | jq .
 ```
 
