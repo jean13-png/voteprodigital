@@ -94,101 +94,122 @@ export async function POST(req: NextRequest) {
 
     if (!entity || !event) {
       await db.insert(webhookLogs).values(webhookLog).catch(() => {});
-      return NextResponse.json({ received: true });
+      return NextResponse.json({ received: true }, { status: 200 });
     }
 
-    // Rechercher le vote par référence FedaPay
-    if (entity.reference) {
-      const voteRes = await db
-        .select()
-        .from(votes)
-        .where(eq(votes.fedapayReference, entity.reference));
+    // ⚡ IMPORTANT: Traiter en arrière-plan pour répondre rapidement à FedaPay
+    // Ne PAS attendre (await) le traitement complet
+    processWebhookAsync(entity, event, webhookLog).catch((err) => {
+      logError("processWebhookAsync", err);
+    });
 
-      const vote = voteRes[0];
-      
-      if (!vote) {
-        webhookLog.error = `Vote non trouvé pour reference: ${entity.reference}`;
-        await db.insert(webhookLogs).values(webhookLog).catch(() => {});
-        return NextResponse.json({ received: true });
-      }
-
-      // Idempotence: ignorer si déjà traité
-      if (vote.statut === "valide" && event === "transaction.approved") {
-        await db.insert(webhookLogs).values(webhookLog).catch(() => {});
-        return NextResponse.json({ received: true });
-      }
-
-      if (vote.statut === "refuse" && (event === "transaction.declined" || event === "transaction.canceled")) {
-        await db.insert(webhookLogs).values(webhookLog).catch(() => {});
-        return NextResponse.json({ received: true });
-      }
-
-      // Traiter l'événement
-      if (event === "transaction.approved") {
-        await db
-          .update(votes)
-          .set({
-            statut: "valide",
-            fedapayStatus: "approved",
-            commentaireAdmin: "Validé automatiquement via FedaPay",
-          })
-          .where(eq(votes.id, vote.id));
-
-        // Récupérer le candidat pour les emails
-        const candidatRes = await db
-          .select()
-          .from(candidates)
-          .where(eq(candidates.id, vote.candidateId));
-        const candidat = candidatRes[0];
-
-        if (candidat) {
-          sendNewVoteNotification({
-            id: vote.id,
-            nomVotant: vote.nomVotant,
-            telephone: vote.telephone,
-            nombreVotes: vote.nombreVotes,
-            montant: vote.montant,
-            candidatNom: candidat.nom,
-            preuve: vote.preuve,
-          }).catch((err) => logError("sendNewVoteNotification", err));
-
-          if (vote.email) {
-            sendVoteReceipt({
-              id: vote.id,
-              nomVotant: vote.nomVotant,
-              telephone: vote.telephone,
-              email: vote.email,
-              nombreVotes: vote.nombreVotes,
-              montant: vote.montant,
-              candidatNom: candidat.nom,
-              statut: "valide",
-              createdAt: vote.createdAt,
-              fedapayReference: vote.fedapayReference,
-            }).catch((err) => logError("sendVoteReceipt", err));
-          }
-        }
-      } else if (
-        event === "transaction.declined" ||
-        event === "transaction.canceled"
-      ) {
-        await db
-          .update(votes)
-          .set({
-            statut: "refuse",
-            fedapayStatus: event === "transaction.declined" ? "declined" : "canceled",
-            commentaireAdmin: "Refusé via FedaPay",
-          })
-          .where(eq(votes.id, vote.id));
-      }
-    }
-
-    await db.insert(webhookLogs).values(webhookLog).catch(() => {});
-    return NextResponse.json({ received: true });
+    // Répondre immédiatement 200 OK à FedaPay
+    return NextResponse.json({ received: true }, { status: 200 });
   } catch (err) {
     webhookLog.status = 500;
     webhookLog.error = String(err);
     await db.insert(webhookLogs).values(webhookLog).catch(() => {});
     logError("Webhook", err);
     return NextResponse.json({ error: "Erreur webhook" }, { status: 500 });
+  }
+}
+
+// Fonction de traitement asynchrone (ne bloque pas la réponse HTTP)
+async function processWebhookAsync(entity: any, event: string, webhookLog: any) {
+  try {
+    // Rechercher le vote par référence FedaPay
+    if (!entity.reference) {
+      webhookLog.error = "Pas de référence dans entity";
+      await db.insert(webhookLogs).values(webhookLog).catch(() => {});
+      return;
+    }
+
+    const voteRes = await db
+      .select()
+      .from(votes)
+      .where(eq(votes.fedapayReference, entity.reference));
+
+    const vote = voteRes[0];
+    
+    if (!vote) {
+      webhookLog.error = `Vote non trouvé pour reference: ${entity.reference}`;
+      await db.insert(webhookLogs).values(webhookLog).catch(() => {});
+      return;
+    }
+
+    // Idempotence: ignorer si déjà traité
+    if (vote.statut === "valide" && event === "transaction.approved") {
+      await db.insert(webhookLogs).values(webhookLog).catch(() => {});
+      return;
+    }
+
+    if (vote.statut === "refuse" && (event === "transaction.declined" || event === "transaction.canceled")) {
+      await db.insert(webhookLogs).values(webhookLog).catch(() => {});
+      return;
+    }
+
+    // Traiter l'événement
+    if (event === "transaction.approved") {
+      await db
+        .update(votes)
+        .set({
+          statut: "valide",
+          fedapayStatus: "approved",
+          commentaireAdmin: "Validé automatiquement via FedaPay",
+        })
+        .where(eq(votes.id, vote.id));
+
+      // Récupérer le candidat pour les emails
+      const candidatRes = await db
+        .select()
+        .from(candidates)
+        .where(eq(candidates.id, vote.candidateId));
+      const candidat = candidatRes[0];
+
+      if (candidat) {
+        sendNewVoteNotification({
+          id: vote.id,
+          nomVotant: vote.nomVotant,
+          telephone: vote.telephone,
+          nombreVotes: vote.nombreVotes,
+          montant: vote.montant,
+          candidatNom: candidat.nom,
+          preuve: vote.preuve,
+        }).catch((err) => logError("sendNewVoteNotification", err));
+
+        if (vote.email) {
+          sendVoteReceipt({
+            id: vote.id,
+            nomVotant: vote.nomVotant,
+            telephone: vote.telephone,
+            email: vote.email,
+            nombreVotes: vote.nombreVotes,
+            montant: vote.montant,
+            candidatNom: candidat.nom,
+            statut: "valide",
+            createdAt: vote.createdAt,
+            fedapayReference: vote.fedapayReference,
+          }).catch((err) => logError("sendVoteReceipt", err));
+        }
+      }
+    } else if (
+      event === "transaction.declined" ||
+      event === "transaction.canceled"
+    ) {
+      await db
+        .update(votes)
+        .set({
+          statut: "refuse",
+          fedapayStatus: event === "transaction.declined" ? "declined" : "canceled",
+          commentaireAdmin: "Refusé via FedaPay",
+        })
+        .where(eq(votes.id, vote.id));
+    }
+
+    await db.insert(webhookLogs).values(webhookLog).catch(() => {});
+  } catch (err) {
+    webhookLog.error = `Erreur processWebhookAsync: ${String(err)}`;
+    await db.insert(webhookLogs).values(webhookLog).catch(() => {});
+    logError("processWebhookAsync", err);
   }
 }

@@ -1,0 +1,74 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                                                               ║
+║        🔧 CORRECTION WEBHOOK FEDAPAY - RÉSUMÉ                ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+
+🔴 PROBLÈME
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Paiements effectués chez FedaPay ✅
+• Argent prélevé chez les utilisateurs ✅
+• MAIS webhook timeout ❌
+• Utilisateurs redirigés vers page d'échec ❌
+• Votes marqués "rejetés" dans l'admin ❌
+
+📧 Message d'erreur FedaPay :
+"Nous ne parvenons toujours pas à transmettre des données 
+à un point de terminaison de webhook associé à votre compte"
+
+✅ SOLUTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Webhook répond maintenant IMMÉDIATEMENT (< 1s)
+2. Traitement (DB + emails) en arrière-plan
+3. Callback améliore pour gérer paiements en cours
+4. Configuration Vercel optimisée (30s timeout)
+
+🔧 FICHIERS MODIFIÉS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ src/app/api/webhook/fedapay/route.ts
+✓ src/app/api/votes/callback/[id]/route.ts
+✓ vercel.json (nouveau)
+✓ Documentation complète ajoutée
+
+🚀 DÉPLOIEMENT (3 COMMANDES)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+git add .
+git commit -m "fix: Optimisation webhook FedaPay"
+git push origin main
+
+⏳ Vercel déploiera automatiquement en 2-3 minutes
+
+🧪 TEST APRÈS DÉPLOIEMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Dashboard FedaPay → Webhooks → Renvoyer un webhook
+   URL: https://live.fedapay.com/webhooks/8830
+   
+2. Créer un vote test (100 XOF) et payer
+
+3. Vérifier :
+   ✓ Webhook retourne 200 OK (pas timeout)
+   ✓ Vote validé dans /admin/votes
+   ✓ Emails envoyés
+   ✓ Utilisateur redirigé vers /vote/success
+
+📊 MONITORING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Logs webhook : https://voteprodigital.vercel.app/admin/logs
+• Logs Vercel : vercel logs --follow
+• Dashboard FedaPay : https://live.fedapay.com/webhooks/8830
+
+📁 DOCUMENTATION COMPLÈTE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• FIX_WEBHOOK_FEDAPAY.md → Explications détaillées
+• DEPLOY_FIX.md → Guide de déploiement
+• test-webhook.sh → Script de test local
+
+⏰ TEMPS ESTIMÉ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Déploiement : 3 minutes
+• Test : 5 minutes
+• Total : < 10 minutes 🚀
+
+═══════════════════════════════════════════════════════════════
+               Prêt pour le déploiement ✅
+═══════════════════════════════════════════════════════════════

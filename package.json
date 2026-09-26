@@ -11,7 +11,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "seed:admin": "npx tsx src/scripts/seed-admin.ts"
+    "seed:admin": "npx tsx src/scripts/seed-admin.ts",
+    "check:votes": "npx tsx scripts/check-pending-votes.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.3",
