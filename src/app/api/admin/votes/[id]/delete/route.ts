@@ -35,17 +35,10 @@ export async function DELETE(
 
     // Log audit
     await auditLog({
-      action: "vote_deleted_temporary",
-      userId: session.user.id,
-      details: {
-        voteId: vote.id,
-        nomVotant: vote.nomVotant,
-        telephone: vote.telephone,
-        candidateId: vote.candidateId,
-        statut: vote.statut,
-        montant: vote.montant,
-        reason: "Suppression temporaire des votes de test",
-      },
+      adminId: parseInt(session.user.id),
+      action: "delete_vote",
+      targetType: "vote",
+      targetId: voteId,
     });
 
     return NextResponse.json({ success: true, message: "Vote supprimé" }, { status: 200 });
