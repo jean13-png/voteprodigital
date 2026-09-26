@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Trophy, Vote } from "lucide-react";
+import { Vote } from "lucide-react";
 import DomaineBadge from "@/components/ui/DomaineBadge";
 import { VOTE_OBJECTIF } from "@/lib/constants";
 
@@ -18,6 +18,12 @@ const rankColors: Record<number, string> = {
   1: "bg-yellow-400 text-yellow-900",
   2: "bg-gray-300 text-gray-700",
   3: "bg-amber-600 text-amber-100",
+};
+
+const rankLabels: Record<number, string> = {
+  1: "1er",
+  2: "2e",
+  3: "3e",
 };
 
 export default function CandidatCard({
@@ -57,9 +63,9 @@ export default function CandidatCard({
 
           {/* Rang */}
           <div
-            className={`absolute top-3 left-3 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${rankBadgeClass}`}
+            className={`absolute top-3 left-3 px-2 py-1 rounded-full flex items-center justify-center text-xs font-bold ${rankBadgeClass}`}
           >
-            {rank <= 3 ? <Trophy className="w-3.5 h-3.5" /> : `#${rank}`}
+            {rank <= 3 ? rankLabels[rank] : `#${rank}`}
           </div>
         </div>
 
