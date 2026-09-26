@@ -43,6 +43,11 @@ async function checkPendingVotes() {
       console.log(`Reference: ${vote.fedapayReference}`);
 
       // Vérifier le statut sur FedaPay
+      if (!vote.fedapayTransactionId) {
+        console.log(`⚠️ Pas de transaction ID - Ignoré`);
+        continue;
+      }
+      
       const transactionData = await getFedaPayTransaction(vote.fedapayTransactionId);
       const transaction = transactionData?.["v1/transaction"] || transactionData;
       const status = transaction?.status;
