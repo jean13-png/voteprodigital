@@ -74,12 +74,16 @@ export async function POST(req: NextRequest) {
     if (!webhookSecret) {
       webhookLog.status = 200;
       webhookLog.error = "FEDAPAY_WEBHOOK_SECRET manquant (mais on accepte quand même)";
-      await db.insert(webhookLogs).values(webhookLog).catch(() => {});
+      
+      // 🔥 INSÉRER LE LOG IMMÉDIATEMENT
+      await db.insert(webhookLogs).values(webhookLog).catch((err) => {
+        console.error("[webhookLogs] Erreur insertion:", err);
+      });
       
       // Même sans secret, on traite le webhook
       try {
         const data = JSON.parse(payload);
-        processWebhookAsync(data.entity, data.event, webhookLog).catch(() => {});
+        processWebhookAsync(data.entity, data.event).catch(() => {});
       } catch {}
       
       return NextResponse.json({ received: true, warning: "No secret configured" }, { status: 200 });
@@ -88,12 +92,16 @@ export async function POST(req: NextRequest) {
     if (!signature) {
       webhookLog.status = 200;
       webhookLog.error = "Signature manquante (mais on accepte quand même)";
-      await db.insert(webhookLogs).values(webhookLog).catch(() => {});
+      
+      // 🔥 INSÉRER LE LOG IMMÉDIATEMENT
+      await db.insert(webhookLogs).values(webhookLog).catch((err) => {
+        console.error("[webhookLogs] Erreur insertion:", err);
+      });
       
       // Même sans signature, on traite le webhook
       try {
         const data = JSON.parse(payload);
-        processWebhookAsync(data.entity, data.event, webhookLog).catch(() => {});
+        processWebhookAsync(data.entity, data.event).catch(() => {});
       } catch {}
       
       return NextResponse.json({ received: true, warning: "No signature" }, { status: 200 });
@@ -108,12 +116,16 @@ export async function POST(req: NextRequest) {
       // En mode production strict, on logue mais ON ACCEPTE QUAND MÊME (200)
       webhookLog.status = 200;
       webhookLog.error = `Signature invalide (acceptée en mode souple). Tests: ${tests?.map(t => `${t.format}=${t.match}`).join(", ")}`;
-      await db.insert(webhookLogs).values(webhookLog).catch(() => {});
+      
+      // 🔥 INSÉRER LE LOG IMMÉDIATEMENT
+      await db.insert(webhookLogs).values(webhookLog).catch((err) => {
+        console.error("[webhookLogs] Erreur insertion:", err);
+      });
       
       // On traite quand même le webhook
       try {
         const data = JSON.parse(payload);
-        processWebhookAsync(data.entity, data.event, webhookLog).catch(() => {});
+        processWebhookAsync(data.entity, data.event).catch(() => {});
       } catch {}
       
       return NextResponse.json({ received: true, warning: "Signature mismatch but accepted" }, { status: 200 });
@@ -125,14 +137,18 @@ export async function POST(req: NextRequest) {
     webhookLog.event = event || "unknown";
     webhookLog.status = 200;
 
+    // 🔥 INSÉRER LE LOG IMMÉDIATEMENT (avant de retourner)
+    await db.insert(webhookLogs).values(webhookLog).catch((err) => {
+      console.error("[webhookLogs] Erreur insertion:", err);
+    });
+
     if (!entity || !event) {
-      await db.insert(webhookLogs).values(webhookLog).catch(() => {});
       return NextResponse.json({ received: true }, { status: 200 });
     }
 
     // ⚡ IMPORTANT: Traiter en arrière-plan pour répondre rapidement à FedaPay
     // Ne PAS attendre (await) le traitement complet
-    processWebhookAsync(entity, event, webhookLog).catch((err) => {
+    processWebhookAsync(entity, event).catch((err) => {
       logError("processWebhookAsync", err);
     });
 
@@ -142,19 +158,23 @@ export async function POST(req: NextRequest) {
     // MÊME EN CAS D'ERREUR, on retourne 200 pour que FedaPay arrête de renvoyer
     webhookLog.status = 200;
     webhookLog.error = `Erreur mais acceptée: ${String(err)}`;
-    await db.insert(webhookLogs).values(webhookLog).catch(() => {});
+    
+    // 🔥 INSÉRER LE LOG IMMÉDIATEMENT
+    await db.insert(webhookLogs).values(webhookLog).catch((insertErr) => {
+      console.error("[webhookLogs] Erreur insertion:", insertErr);
+    });
+    
     logError("Webhook", err);
     return NextResponse.json({ received: true, error: "Error but accepted" }, { status: 200 });
   }
 }
 
 // Fonction de traitement asynchrone (ne bloque pas la réponse HTTP)
-async function processWebhookAsync(entity: any, event: string, webhookLog: any) {
+async function processWebhookAsync(entity: any, event: string) {
   try {
     // Rechercher le vote par référence FedaPay
     if (!entity.reference) {
-      webhookLog.error = "Pas de référence dans entity";
-      await db.insert(webhookLogs).values(webhookLog).catch(() => {});
+      console.log("[processWebhookAsync] Pas de référence dans entity");
       return;
     }
 
@@ -166,19 +186,18 @@ async function processWebhookAsync(entity: any, event: string, webhookLog: any) 
     const vote = voteRes[0];
     
     if (!vote) {
-      webhookLog.error = `Vote non trouvé pour reference: ${entity.reference}`;
-      await db.insert(webhookLogs).values(webhookLog).catch(() => {});
+      console.log(`[processWebhookAsync] Vote non trouvé pour reference: ${entity.reference}`);
       return;
     }
 
     // Idempotence: ignorer si déjà traité
     if (vote.statut === "valide" && event === "transaction.approved") {
-      await db.insert(webhookLogs).values(webhookLog).catch(() => {});
+      console.log(`[processWebhookAsync] Vote #${vote.id} déjà validé - ignoré`);
       return;
     }
 
     if (vote.statut === "refuse" && (event === "transaction.declined" || event === "transaction.canceled")) {
-      await db.insert(webhookLogs).values(webhookLog).catch(() => {});
+      console.log(`[processWebhookAsync] Vote #${vote.id} déjà refusé - ignoré`);
       return;
     }
 
@@ -192,6 +211,8 @@ async function processWebhookAsync(entity: any, event: string, webhookLog: any) 
           commentaireAdmin: "Validé automatiquement via FedaPay",
         })
         .where(eq(votes.id, vote.id));
+
+      console.log(`[processWebhookAsync] Vote #${vote.id} validé avec succès`);
 
       // Récupérer le candidat pour les emails
       const candidatRes = await db
@@ -238,12 +259,11 @@ async function processWebhookAsync(entity: any, event: string, webhookLog: any) 
           commentaireAdmin: "Refusé via FedaPay",
         })
         .where(eq(votes.id, vote.id));
+      
+      console.log(`[processWebhookAsync] Vote #${vote.id} marqué comme refusé (${event})`);
     }
-
-    await db.insert(webhookLogs).values(webhookLog).catch(() => {});
   } catch (err) {
-    webhookLog.error = `Erreur processWebhookAsync: ${String(err)}`;
-    await db.insert(webhookLogs).values(webhookLog).catch(() => {});
+    console.error("[processWebhookAsync] Erreur:", err);
     logError("processWebhookAsync", err);
   }
 }
