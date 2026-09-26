@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Vote } from "lucide-react";
+import { Vote, Trophy } from "lucide-react";
 import DomaineBadge from "@/components/ui/DomaineBadge";
 import { VOTE_OBJECTIF } from "@/lib/constants";
 
@@ -61,12 +61,18 @@ export default function CandidatCard({
             </div>
           )}
 
-          {/* Rang */}
-          <div
-            className={`absolute top-3 left-3 px-2 py-1 rounded-full flex items-center justify-center text-xs font-bold ${rankBadgeClass}`}
-          >
-            {rank <= 3 ? rankLabels[rank] : `#${rank}`}
-          </div>
+          {/* Rang - 1er, 2e, 3e seulement */}
+          {rank <= 3 && (
+            <div
+              className={`absolute ${rank === 1 ? "top-3 right-3" : "top-3 left-3"} ${rank === 1 ? "px-2.5 py-2" : "px-2 py-1"} rounded-full flex items-center justify-center text-xs font-bold ${rankBadgeClass}`}
+            >
+              {rank === 1 ? (
+                <Trophy className="w-4 h-4" />
+              ) : (
+                rankLabels[rank]
+              )}
+            </div>
+          )}
         </div>
 
         {/* Infos */}
