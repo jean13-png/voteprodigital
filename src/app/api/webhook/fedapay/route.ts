@@ -49,6 +49,9 @@ function verifyFedaPaySignature(payload: string, signature: string, secret: stri
 }
 
 export async function POST(req: NextRequest) {
+  // 🔥 LOGS CONSOLE POUR DÉBOGUER
+  console.log("[WEBHOOK] Début du traitement webhook");
+  
   let webhookLog: any = {
     event: "unknown",
     status: 500,
@@ -64,6 +67,10 @@ export async function POST(req: NextRequest) {
     const webhookSecret = process.env.FEDAPAY_WEBHOOK_SECRET;
     const signature = req.headers.get("x-fedapay-signature");
 
+    console.log("[WEBHOOK] Payload reçu:", payload.substring(0, 200));
+    console.log("[WEBHOOK] Signature reçue:", signature?.substring(0, 50));
+    console.log("[WEBHOOK] Secret configuré:", webhookSecret ? "OUI" : "NON");
+
     webhookLog.payload = payload.substring(0, 500);
     webhookLog.signatureReceived = signature?.substring(0, 100);
 
@@ -75,10 +82,12 @@ export async function POST(req: NextRequest) {
       webhookLog.status = 200;
       webhookLog.error = "FEDAPAY_WEBHOOK_SECRET manquant (mais on accepte quand même)";
       
+      console.log("[WEBHOOK] Tentative d'insertion log (pas de secret)...");
       // 🔥 INSÉRER LE LOG IMMÉDIATEMENT
       await db.insert(webhookLogs).values(webhookLog).catch((err) => {
         console.error("[webhookLogs] Erreur insertion:", err);
       });
+      console.log("[WEBHOOK] Log inséré (pas de secret)");
       
       // Même sans secret, on traite le webhook
       try {
@@ -93,10 +102,12 @@ export async function POST(req: NextRequest) {
       webhookLog.status = 200;
       webhookLog.error = "Signature manquante (mais on accepte quand même)";
       
+      console.log("[WEBHOOK] Tentative d'insertion log (pas de signature)...");
       // 🔥 INSÉRER LE LOG IMMÉDIATEMENT
       await db.insert(webhookLogs).values(webhookLog).catch((err) => {
         console.error("[webhookLogs] Erreur insertion:", err);
       });
+      console.log("[WEBHOOK] Log inséré (pas de signature)");
       
       // Même sans signature, on traite le webhook
       try {
@@ -109,6 +120,8 @@ export async function POST(req: NextRequest) {
 
     const { valid, format, tests } = verifyFedaPaySignature(payload, signature, webhookSecret);
     
+    console.log("[WEBHOOK] Signature valide:", valid, "Format:", format);
+    
     webhookLog.signatureValid = valid;
     webhookLog.signatureFormat = format || "AUCUN_MATCH";
 
@@ -117,10 +130,12 @@ export async function POST(req: NextRequest) {
       webhookLog.status = 200;
       webhookLog.error = `Signature invalide (acceptée en mode souple). Tests: ${tests?.map(t => `${t.format}=${t.match}`).join(", ")}`;
       
+      console.log("[WEBHOOK] Tentative d'insertion log (signature invalide)...");
       // 🔥 INSÉRER LE LOG IMMÉDIATEMENT
       await db.insert(webhookLogs).values(webhookLog).catch((err) => {
         console.error("[webhookLogs] Erreur insertion:", err);
       });
+      console.log("[WEBHOOK] Log inséré (signature invalide)");
       
       // On traite quand même le webhook
       try {
@@ -137,10 +152,12 @@ export async function POST(req: NextRequest) {
     webhookLog.event = event || "unknown";
     webhookLog.status = 200;
 
+    console.log("[WEBHOOK] Event:", event, "- Tentative d'insertion log...");
     // 🔥 INSÉRER LE LOG IMMÉDIATEMENT (avant de retourner)
     await db.insert(webhookLogs).values(webhookLog).catch((err) => {
       console.error("[webhookLogs] Erreur insertion:", err);
     });
+    console.log("[WEBHOOK] Log inséré avec succès");
 
     if (!entity || !event) {
       return NextResponse.json({ received: true }, { status: 200 });
@@ -153,9 +170,11 @@ export async function POST(req: NextRequest) {
     });
 
     // Répondre immédiatement 200 OK à FedaPay
+    console.log("[WEBHOOK] Réponse 200 OK envoyée");
     return NextResponse.json({ received: true }, { status: 200 });
   } catch (err) {
     // MÊME EN CAS D'ERREUR, on retourne 200 pour que FedaPay arrête de renvoyer
+    console.error("[WEBHOOK] ERREUR:", err);
     webhookLog.status = 200;
     webhookLog.error = `Erreur mais acceptée: ${String(err)}`;
     
