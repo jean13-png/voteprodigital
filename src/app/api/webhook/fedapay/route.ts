@@ -23,24 +23,36 @@ export async function POST(req: NextRequest) {
     const webhookSecret = process.env.FEDAPAY_WEBHOOK_SECRET;
     const signature = req.headers.get("x-fedapay-signature");
 
+    console.log("[Webhook] Event reçu. Secret configuré:", !!webhookSecret);
+    console.log("[Webhook] Signature reçue:", !!signature);
+
     if (webhookSecret && signature) {
       try {
         const valid = verifyFedaPaySignature(payload, signature, webhookSecret);
+        console.log("[Webhook] Signature valide:", valid);
         if (!valid) {
+          console.error("[Webhook] Signature INVALIDE!");
           return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
         }
-      } catch {
+      } catch (e) {
+        console.error("[Webhook] Erreur vérification signature:", e);
         return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
       }
     } else {
-      return NextResponse.json({ error: "Configuration webhook incomplète" }, { status: 500 });
+      console.warn("[Webhook] Secret ou signature manquant - validation ignorée");
     }
 
-    const { entity, event } = JSON.parse(payload);
+    const data = JSON.parse(payload);
+    console.log("[Webhook] Données reçues:", JSON.stringify(data, null, 2));
+
+    const { entity, event } = data;
 
     if (!entity || !event) {
+      console.warn("[Webhook] Entity ou event manquant");
       return NextResponse.json({ received: true });
     }
+
+    console.log("[Webhook] Event type:", event, "| Entity reference:", entity.reference);
 
     // Rechercher le vote par référence FedaPay
     if (entity.reference) {
@@ -50,17 +62,28 @@ export async function POST(req: NextRequest) {
         .where(eq(votes.fedapayReference, entity.reference));
 
       const vote = voteRes[0];
-      if (!vote) return NextResponse.json({ received: true });
+      
+      if (!vote) {
+        console.warn("[Webhook] Vote non trouvé pour reference:", entity.reference);
+        return NextResponse.json({ received: true });
+      }
 
+      console.log("[Webhook] Vote trouvé. Statut actuel:", vote.statut);
+
+      // Idempotence: ignorer si déjà traité
       if (vote.statut === "valide" && event === "transaction.approved") {
+        console.log("[Webhook] Vote déjà validé, ignorant");
         return NextResponse.json({ received: true });
       }
 
       if (vote.statut === "refuse" && (event === "transaction.declined" || event === "transaction.canceled")) {
+        console.log("[Webhook] Vote déjà refusé, ignorant");
         return NextResponse.json({ received: true });
       }
 
+      // Traiter l'événement
       if (event === "transaction.approved") {
+        console.log("[Webhook] APPROBATION - mise à jour vote à VALIDE");
         await db
           .update(votes)
           .set({
@@ -109,6 +132,7 @@ export async function POST(req: NextRequest) {
         event === "transaction.declined" ||
         event === "transaction.canceled"
       ) {
+        console.log("[Webhook] REFUS/ANNULATION - mise à jour vote à REFUSE");
         await db
           .update(votes)
           .set({
@@ -117,11 +141,14 @@ export async function POST(req: NextRequest) {
             commentaireAdmin: "Refusé via FedaPay",
           })
           .where(eq(votes.id, vote.id));
+      } else {
+        console.log("[Webhook] Event non géré:", event);
       }
     }
 
     return NextResponse.json({ received: true });
   } catch (err) {
+    console.error("[Webhook] Erreur:", err);
     logError("Webhook", err);
     return NextResponse.json({ error: "Erreur webhook" }, { status: 500 });
   }

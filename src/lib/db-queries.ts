@@ -103,10 +103,12 @@ export async function getCandidatesRankedPaginated(options: {
     db
       .select({ count: sql<number>`COUNT(DISTINCT ${candidates.id})` })
       .from(candidates)
-      .where(searchCondition),
+      .leftJoin(votes, eq(votes.candidateId, candidates.id))
+      .where(searchCondition)
+      .groupBy(candidates.id),
   ]);
 
-  const total = Number(countRes[0]?.count ?? 0);
+  const total = countRes.length;
 
   return {
     candidats: rows,
