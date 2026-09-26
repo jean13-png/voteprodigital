@@ -9,10 +9,43 @@ export const runtime = "nodejs";
 
 function verifyFedaPaySignature(payload: string, signature: string, secret: string): boolean {
   try {
-    // FedaPay envoie la signature en base64, donc on doit comparer en base64
-    const expected = createHmac("sha256", secret).update(payload).digest("base64");
-    return expected === signature;
-  } catch {
+    // Essayer plusieurs formats de signature
+    
+    // 1. SHA256 en hex
+    const hexSignature = createHmac("sha256", secret).update(payload).digest("hex");
+    if (hexSignature === signature) {
+      console.log("[Signature] Match trouvé en HEX");
+      return true;
+    }
+    
+    // 2. SHA256 en base64
+    const base64Signature = createHmac("sha256", secret).update(payload).digest("base64");
+    if (base64Signature === signature) {
+      console.log("[Signature] Match trouvé en BASE64");
+      return true;
+    }
+    
+    // 3. SHA1 en hex (parfois utilisé)
+    const sha1Hex = createHmac("sha1", secret).update(payload).digest("hex");
+    if (sha1Hex === signature) {
+      console.log("[Signature] Match trouvé en SHA1 HEX");
+      return true;
+    }
+    
+    // 4. SHA1 en base64
+    const sha1Base64 = createHmac("sha1", secret).update(payload).digest("base64");
+    if (sha1Base64 === signature) {
+      console.log("[Signature] Match trouvé en SHA1 BASE64");
+      return true;
+    }
+
+    console.log("[Signature] Aucun match. Signature reçue:", signature?.substring(0, 50) + "...");
+    console.log("[Signature] HEX attendu:", hexSignature?.substring(0, 50) + "...");
+    console.log("[Signature] BASE64 attendu:", base64Signature?.substring(0, 50) + "...");
+    
+    return false;
+  } catch (e) {
+    console.error("[Signature] Erreur:", e);
     return false;
   }
 }
@@ -33,17 +66,16 @@ export async function POST(req: NextRequest) {
         const valid = verifyFedaPaySignature(payload, signature, webhookSecret);
         console.log("[Webhook] Signature valide:", valid);
         if (!valid) {
-          console.error("[Webhook] Signature INVALIDE! Mais on continue pour debug...");
-          // TODO: Réactiver après debug
-          // return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
+          console.error("[Webhook] Signature INVALIDE! Retour 401");
+          return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
         }
       } catch (e) {
         console.error("[Webhook] Erreur vérification signature:", e);
-        // TODO: Réactiver après debug
-        // return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
+        return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
       }
     } else {
-      console.warn("[Webhook] Secret ou signature manquant - validation ignorée");
+      console.warn("[Webhook] Secret ou signature manquant");
+      return NextResponse.json({ error: "Configuration webhook incomplète" }, { status: 500 });
     }
 
     const data = JSON.parse(payload);
