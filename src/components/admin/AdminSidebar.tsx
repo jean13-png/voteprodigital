@@ -20,6 +20,7 @@ const navItems = [
   { href: "/admin/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/admin/votes", label: "Votes", icon: Vote },
   { href: "/admin/candidats", label: "Candidats", icon: Users },
+  { href: "/admin/identifiants", label: "Identifiants", icon: GraduationCap },
   { href: "/admin/projets", label: "Projets", icon: FolderKanban },
   { href: "/admin/inscriptions", label: "Inscriptions", icon: BookOpen },
   { href: "/admin/contact", label: "Contact", icon: Mail },

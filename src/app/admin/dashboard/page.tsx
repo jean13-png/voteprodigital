@@ -1,7 +1,6 @@
 import { getAdminStats, getDerniersVotes } from "@/lib/db-queries";
-import { Vote, Clock, CheckCircle, Users, Banknote, ArrowRight, FileText, Send } from "lucide-react";
+import { Vote, Clock, CheckCircle, Users, Banknote, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { generateCandidateCredentials } from "@/lib/actions/student-credentials";
 import BackupButton from "@/components/admin/BackupButton";
 
 export const dynamic = "force-dynamic";
@@ -52,43 +51,6 @@ export default async function AdminDashboard() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <div className="mb-6 rounded-2xl border border-[#1B2A6B]/10 bg-[#1B2A6B] p-5 text-white shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#F5A623] mb-2">
-              Gestion des accès
-            </p>
-            <h2 className="text-xl font-bold">Générer le PDF des identifiants candidats</h2>
-            <p className="mt-1 text-sm text-slate-200">
-              Génére un document PDF contenant les identifiants de connexion de chaque candidat ayant un email, avec possibilité d’enregistrer un mot de passe unique pour chaque compte.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link
-              href="/admin/identifiants"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-[#1B2A6B] transition hover:bg-slate-100"
-            >
-              <FileText className="h-4 w-4" />
-              Voir les identifiants
-            </Link>
-            <form action={generateCandidateCredentials} className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <input type="hidden" name="scope" value="missing" />
-              <label className="inline-flex items-center gap-2 text-sm text-slate-100">
-                <input type="checkbox" name="includePdf" value="true" className="h-4 w-4 rounded border-slate-300 text-[#F5A623] focus:ring-[#F5A623]" />
-                Inclure le PDF
-              </label>
-              <button
-                type="submit"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#F5A623] px-4 py-2.5 text-sm font-semibold text-[#1B2A6B] transition hover:bg-[#e59a12]"
-              >
-                <Send className="h-4 w-4" />
-                Générer manquants
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
       <div className="mb-7 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-extrabold text-[#1B2A6B]">
