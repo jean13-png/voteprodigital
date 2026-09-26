@@ -1,8 +1,7 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { eq, isNotNull } from "drizzle-orm";
+import { eq, isNotNull, and } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
 
@@ -24,6 +23,7 @@ export async function generateCandidateCredentials(formData: FormData) {
   const includePdf = formData.get("includePdf") === "true" || formData.get("includePdf") === "on";
   const scope = String(formData.get("scope") ?? "missing");
 
+  // Récupérer tous les candidats avec email
   const rows = await db
     .select({
       id: candidates.id,
@@ -35,16 +35,19 @@ export async function generateCandidateCredentials(formData: FormData) {
     .from(candidates)
     .where(isNotNull(candidates.email));
 
+  // Filtrer les candidats éligibles
   const eligibleRows = rows.filter((row) => {
     if (!row.email) return false;
 
     if (scope === "all") return true;
+    // Générer pour ceux qui n'ont pas déjà identifiant ET mot de passe
     return !row.generatedPassword || !row.password;
   });
 
   let generated = 0;
   let sent = 0;
 
+  // Générer les identifiants et mots de passe
   for (const row of eligibleRows) {
     if (!row.email) continue;
 
@@ -60,18 +63,29 @@ export async function generateCandidateCredentials(formData: FormData) {
       })
       .where(eq(candidates.id, row.id));
 
-    await sendCandidateCredentialsEmail({
-      nom: row.nom,
-      email: row.email,
-      password,
-      includePdf,
-    });
+    // Envoyer l'email avec les identifiants
+    try {
+      await sendCandidateCredentialsEmail({
+        nom: row.nom,
+        email: row.email,
+        password,
+        includePdf,
+      });
+      sent += 1;
+    } catch (error) {
+      console.error(`Erreur envoi email pour ${row.nom}:`, error);
+    }
 
     generated += 1;
-    sent += 1;
   }
 
-  revalidatePath("/admin/dashboard");
   revalidatePath("/admin/identifiants");
-  redirect(`/admin/dashboard?credentials=generated&count=${generated}&sent=${sent}&pdf=${includePdf ? "1" : "0"}&scope=${scope}`);
+  
+  // Retourner les stats au lieu de rediriger
+  return {
+    success: true,
+    generated,
+    sent,
+    message: `${generated} identifiant(s) généré(s), ${sent} email(s) envoyé(s)`,
+  };
 }

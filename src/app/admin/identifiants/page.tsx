@@ -3,7 +3,8 @@ import { PasswordReveal } from "@/components/admin/PasswordReveal";
 import { generateCandidateCredentials } from "@/lib/actions/student-credentials";
 import { asc, isNotNull } from "drizzle-orm";
 import Link from "next/link";
-import { ArrowLeft, Download, KeyRound, Sparkles } from "lucide-react";
+import { ArrowLeft, Download, KeyRound } from "lucide-react";
+import { CredentialsForm } from "@/components/admin/CredentialsForm";
 
 export const dynamic = "force-dynamic";
 
@@ -57,16 +58,7 @@ export default async function AdminIdentifiantsPage() {
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <form action={generateCandidateCredentials}>
-            <input type="hidden" name="scope" value="all" />
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#F5A623] px-4 py-2.5 text-sm font-semibold text-[#1B2A6B] transition hover:bg-[#e59a12]"
-            >
-              <Sparkles className="h-4 w-4" />
-              Générer tout
-            </button>
-          </form>
+          <CredentialsForm generateCandidateCredentials={generateCandidateCredentials} />
 
           <a
             href="/api/admin/identifiants/pdf"
@@ -101,7 +93,7 @@ export default async function AdminIdentifiantsPage() {
               {rows.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="px-5 py-10 text-center text-gray-400">
-                    Aucun identifiant n’a été généré pour le moment.
+                    Aucun identifiant n'a été généré pour le moment.
                   </td>
                 </tr>
               ) : (
@@ -110,13 +102,17 @@ export default async function AdminIdentifiantsPage() {
                     <td className="px-5 py-3.5 font-semibold text-gray-800">{row.nom}</td>
                     <td className="px-5 py-3.5 text-gray-700">{row.email}</td>
                     <td className="px-5 py-3.5 text-gray-700">
-                      <div className="inline-flex items-center gap-2 rounded-lg bg-[#F5A623]/10 px-2.5 py-1.5 font-semibold text-[#1B2A6B]">
-                        <KeyRound className="h-3.5 w-3.5" />
-                        <PasswordReveal value={row.generatedPassword} />
-                      </div>
+                      {row.generatedPassword ? (
+                        <div className="inline-flex items-center gap-2 rounded-lg bg-[#F5A623]/10 px-2.5 py-1.5 font-semibold text-[#1B2A6B]">
+                          <KeyRound className="h-3.5 w-3.5" />
+                          <PasswordReveal value={row.generatedPassword} />
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 italic">Non généré</span>
+                      )}
                     </td>
                     <td className="px-5 py-3.5 text-gray-600 whitespace-nowrap">
-                      {new Date(row.updatedAt).toLocaleString("fr-FR")}
+                      {row.updatedAt ? new Date(row.updatedAt).toLocaleString("fr-FR") : "-"}
                     </td>
                   </tr>
                 ))
