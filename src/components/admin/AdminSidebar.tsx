@@ -13,6 +13,7 @@ import {
   BookOpen,
   Mail,
   FolderKanban,
+  Zap,
 } from "lucide-react";
 
 const navItems = [
@@ -22,6 +23,7 @@ const navItems = [
   { href: "/admin/projets", label: "Projets", icon: FolderKanban },
   { href: "/admin/inscriptions", label: "Inscriptions", icon: BookOpen },
   { href: "/admin/contact", label: "Contact", icon: Mail },
+  { href: "/admin/logs", label: "Logs", icon: Zap },
 ];
 
 interface Props {
