@@ -86,6 +86,20 @@ export const votes = pgTable("votes", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// ─── Table : webhook_logs ─────────────────────────────────────────────────────
+
+export const webhookLogs = pgTable("webhook_logs", {
+  id: serial("id").primaryKey(),
+  event: varchar("event", { length: 100 }).notNull(),
+  status: integer("status").notNull(),
+  signatureReceived: text("signature_received"),
+  signatureFormat: varchar("signature_format", { length: 50 }),
+  signatureValid: boolean("signature_valid"),
+  payload: text("payload"),
+  error: text("error"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // ─── Relations ────────────────────────────────────────────────────────────────
 
 export const candidatesRelations = relations(candidates, ({ many }) => ({

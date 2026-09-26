@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, votes, candidates } from "@/db";
+import { db, votes, candidates, webhookLogs } from "@/db";
 import { eq } from "drizzle-orm";
 import { createHmac } from "crypto";
 import { logError } from "@/lib/log-error";
@@ -7,88 +7,95 @@ import { sendNewVoteNotification, sendVoteReceipt } from "@/lib/email";
 
 export const runtime = "nodejs";
 
-function verifyFedaPaySignature(payload: string, signature: string, secret: string): boolean {
+interface SignatureTest {
+  format: string;
+  signature: string;
+  match: boolean;
+}
+
+function verifyFedaPaySignature(payload: string, signature: string, secret: string): { valid: boolean; format?: string; tests?: SignatureTest[] } {
+  const tests: SignatureTest[] = [];
+  
   try {
-    // Essayer plusieurs formats de signature
-    
     // 1. SHA256 en hex
     const hexSignature = createHmac("sha256", secret).update(payload).digest("hex");
-    if (hexSignature === signature) {
-      console.log("[Signature] Match trouvé en HEX");
-      return true;
-    }
+    const hexMatch = hexSignature === signature;
+    tests.push({ format: "SHA256-HEX", signature: hexSignature.substring(0, 50), match: hexMatch });
+    if (hexMatch) return { valid: true, format: "SHA256-HEX", tests };
     
     // 2. SHA256 en base64
     const base64Signature = createHmac("sha256", secret).update(payload).digest("base64");
-    if (base64Signature === signature) {
-      console.log("[Signature] Match trouvé en BASE64");
-      return true;
-    }
+    const base64Match = base64Signature === signature;
+    tests.push({ format: "SHA256-BASE64", signature: base64Signature.substring(0, 50), match: base64Match });
+    if (base64Match) return { valid: true, format: "SHA256-BASE64", tests };
     
-    // 3. SHA1 en hex (parfois utilisé)
+    // 3. SHA1 en hex
     const sha1Hex = createHmac("sha1", secret).update(payload).digest("hex");
-    if (sha1Hex === signature) {
-      console.log("[Signature] Match trouvé en SHA1 HEX");
-      return true;
-    }
+    const sha1HexMatch = sha1Hex === signature;
+    tests.push({ format: "SHA1-HEX", signature: sha1Hex.substring(0, 50), match: sha1HexMatch });
+    if (sha1HexMatch) return { valid: true, format: "SHA1-HEX", tests };
     
     // 4. SHA1 en base64
     const sha1Base64 = createHmac("sha1", secret).update(payload).digest("base64");
-    if (sha1Base64 === signature) {
-      console.log("[Signature] Match trouvé en SHA1 BASE64");
-      return true;
-    }
+    const sha1Base64Match = sha1Base64 === signature;
+    tests.push({ format: "SHA1-BASE64", signature: sha1Base64.substring(0, 50), match: sha1Base64Match });
+    if (sha1Base64Match) return { valid: true, format: "SHA1-BASE64", tests };
 
-    console.log("[Signature] Aucun match. Signature reçue:", signature?.substring(0, 50) + "...");
-    console.log("[Signature] HEX attendu:", hexSignature?.substring(0, 50) + "...");
-    console.log("[Signature] BASE64 attendu:", base64Signature?.substring(0, 50) + "...");
-    
-    return false;
+    return { valid: false, tests };
   } catch (e) {
     console.error("[Signature] Erreur:", e);
-    return false;
+    return { valid: false, tests };
   }
 }
 
 export async function POST(req: NextRequest) {
+  let webhookLog: any = {
+    event: "unknown",
+    status: 500,
+    signatureReceived: undefined,
+    signatureFormat: undefined,
+    signatureValid: false,
+    payload: undefined,
+    error: undefined,
+  };
+
   try {
     const payload = await req.text();
-
     const webhookSecret = process.env.FEDAPAY_WEBHOOK_SECRET;
     const signature = req.headers.get("x-fedapay-signature");
 
-    console.log("[Webhook] Event reçu. Secret configuré:", !!webhookSecret);
-    console.log("[Webhook] Signature reçue:", !!signature);
-    console.log("[Webhook] Signature value:", signature);
+    webhookLog.payload = payload.substring(0, 500);
+    webhookLog.signatureReceived = signature?.substring(0, 100);
 
-    if (webhookSecret && signature) {
-      try {
-        const valid = verifyFedaPaySignature(payload, signature, webhookSecret);
-        console.log("[Webhook] Signature valide:", valid);
-        if (!valid) {
-          console.error("[Webhook] Signature INVALIDE! Retour 401");
-          return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
-        }
-      } catch (e) {
-        console.error("[Webhook] Erreur vérification signature:", e);
-        return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
-      }
-    } else {
-      console.warn("[Webhook] Secret ou signature manquant");
-      return NextResponse.json({ error: "Configuration webhook incomplète" }, { status: 500 });
+    if (!webhookSecret || !signature) {
+      webhookLog.status = 500;
+      webhookLog.error = "Secret ou signature manquant";
+      await db.insert(webhookLogs).values(webhookLog).catch(() => {});
+      return NextResponse.json({ error: "Configuration incomplète" }, { status: 500 });
+    }
+
+    const { valid, format, tests } = verifyFedaPaySignature(payload, signature, webhookSecret);
+    
+    webhookLog.signatureValid = valid;
+    webhookLog.signatureFormat = format || "AUCUN_MATCH";
+
+    if (!valid) {
+      webhookLog.status = 401;
+      webhookLog.error = `Signature invalide. Tests: ${tests?.map(t => `${t.format}=${t.match}`).join(", ")}. Reçu: ${signature?.substring(0, 50)}`;
+      await db.insert(webhookLogs).values(webhookLog).catch(() => {});
+      return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
     }
 
     const data = JSON.parse(payload);
-    console.log("[Webhook] Données reçues:", JSON.stringify(data, null, 2));
-
     const { entity, event } = data;
 
+    webhookLog.event = event || "unknown";
+    webhookLog.status = 200;
+
     if (!entity || !event) {
-      console.warn("[Webhook] Entity ou event manquant");
+      await db.insert(webhookLogs).values(webhookLog).catch(() => {});
       return NextResponse.json({ received: true });
     }
-
-    console.log("[Webhook] Event type:", event, "| Entity reference:", entity.reference);
 
     // Rechercher le vote par référence FedaPay
     if (entity.reference) {
@@ -100,26 +107,24 @@ export async function POST(req: NextRequest) {
       const vote = voteRes[0];
       
       if (!vote) {
-        console.warn("[Webhook] Vote non trouvé pour reference:", entity.reference);
+        webhookLog.error = `Vote non trouvé pour reference: ${entity.reference}`;
+        await db.insert(webhookLogs).values(webhookLog).catch(() => {});
         return NextResponse.json({ received: true });
       }
 
-      console.log("[Webhook] Vote trouvé. Statut actuel:", vote.statut);
-
       // Idempotence: ignorer si déjà traité
       if (vote.statut === "valide" && event === "transaction.approved") {
-        console.log("[Webhook] Vote déjà validé, ignorant");
+        await db.insert(webhookLogs).values(webhookLog).catch(() => {});
         return NextResponse.json({ received: true });
       }
 
       if (vote.statut === "refuse" && (event === "transaction.declined" || event === "transaction.canceled")) {
-        console.log("[Webhook] Vote déjà refusé, ignorant");
+        await db.insert(webhookLogs).values(webhookLog).catch(() => {});
         return NextResponse.json({ received: true });
       }
 
       // Traiter l'événement
       if (event === "transaction.approved") {
-        console.log("[Webhook] APPROBATION - mise à jour vote à VALIDE");
         await db
           .update(votes)
           .set({
@@ -137,7 +142,6 @@ export async function POST(req: NextRequest) {
         const candidat = candidatRes[0];
 
         if (candidat) {
-          // Notifier l'admin que le paiement est confirmé
           sendNewVoteNotification({
             id: vote.id,
             nomVotant: vote.nomVotant,
@@ -148,7 +152,6 @@ export async function POST(req: NextRequest) {
             preuve: vote.preuve,
           }).catch((err) => logError("sendNewVoteNotification", err));
 
-          // Envoyer le récépissé au votant
           if (vote.email) {
             sendVoteReceipt({
               id: vote.id,
@@ -168,7 +171,6 @@ export async function POST(req: NextRequest) {
         event === "transaction.declined" ||
         event === "transaction.canceled"
       ) {
-        console.log("[Webhook] REFUS/ANNULATION - mise à jour vote à REFUSE");
         await db
           .update(votes)
           .set({
@@ -177,14 +179,15 @@ export async function POST(req: NextRequest) {
             commentaireAdmin: "Refusé via FedaPay",
           })
           .where(eq(votes.id, vote.id));
-      } else {
-        console.log("[Webhook] Event non géré:", event);
       }
     }
 
+    await db.insert(webhookLogs).values(webhookLog).catch(() => {});
     return NextResponse.json({ received: true });
   } catch (err) {
-    console.error("[Webhook] Erreur:", err);
+    webhookLog.status = 500;
+    webhookLog.error = String(err);
+    await db.insert(webhookLogs).values(webhookLog).catch(() => {});
     logError("Webhook", err);
     return NextResponse.json({ error: "Erreur webhook" }, { status: 500 });
   }
