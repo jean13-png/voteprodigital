@@ -2,6 +2,7 @@ import { getAdminStats, getDerniersVotes } from "@/lib/db-queries";
 import { Vote, Clock, CheckCircle, Users, Banknote, ArrowRight, FileText, Send } from "lucide-react";
 import Link from "next/link";
 import { generateCandidateCredentials } from "@/lib/actions/student-credentials";
+import BackupButton from "@/components/admin/BackupButton";
 
 export const dynamic = "force-dynamic";
 
@@ -88,13 +89,16 @@ export default async function AdminDashboard() {
           </div>
         </div>
       </div>
-      <div className="mb-7">
-        <h1 className="text-2xl font-extrabold text-[#1B2A6B]">
-          Tableau de bord
-        </h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Vue d&apos;ensemble de la plateforme de vote ProDigital Center.
-        </p>
+      <div className="mb-7 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold text-[#1B2A6B]">
+            Tableau de bord
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">
+            Vue d&apos;ensemble de la plateforme de vote ProDigital Center.
+          </p>
+        </div>
+        <BackupButton />
       </div>
 
       {/* KPIs */}
