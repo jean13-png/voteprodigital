@@ -17,6 +17,31 @@ function verifyFedaPaySignature(payload: string, signature: string, secret: stri
   const tests: SignatureTest[] = [];
   
   try {
+    // Format FedaPay: "t=timestamp,s=signature" (style Stripe)
+    if (signature.startsWith("t=") && signature.includes(",s=")) {
+      const parts = signature.split(",");
+      const timestamp = parts.find(p => p.startsWith("t="))?.substring(2);
+      const sig = parts.find(p => p.startsWith("s="))?.substring(2);
+      
+      if (timestamp && sig) {
+        // Construire le payload signé: timestamp.payload
+        const signedPayload = `${timestamp}.${payload}`;
+        
+        // Test SHA256 hex
+        const hexSig = createHmac("sha256", secret).update(signedPayload).digest("hex");
+        const hexMatch = hexSig === sig;
+        tests.push({ format: "STRIPE-SHA256-HEX", signature: hexSig.substring(0, 50), match: hexMatch });
+        if (hexMatch) return { valid: true, format: "STRIPE-SHA256-HEX", tests };
+        
+        // Test SHA256 base64
+        const base64Sig = createHmac("sha256", secret).update(signedPayload).digest("base64");
+        const base64Match = base64Sig === sig;
+        tests.push({ format: "STRIPE-SHA256-BASE64", signature: base64Sig.substring(0, 50), match: base64Match });
+        if (base64Match) return { valid: true, format: "STRIPE-SHA256-BASE64", tests };
+      }
+    }
+    
+    // Fallback: tests classiques (sans timestamp)
     // 1. SHA256 en hex
     const hexSignature = createHmac("sha256", secret).update(payload).digest("hex");
     const hexMatch = hexSignature === signature;
