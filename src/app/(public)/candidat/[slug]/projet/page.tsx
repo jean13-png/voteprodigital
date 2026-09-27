@@ -148,7 +148,7 @@ export default async function CandidatProjetPage({ params }: { params: Promise<{
               {/* === BOUTONS D'ACTION === */}
               <div className="space-y-3">
                 {/* Voter */}
-                <Link href={`/voter/${candidat.slug}`} className="inline-flex w-full items-center justify-center gap-2 bg-[#F5A623] hover:bg-[#e09516] text-[#1B2A6B] font-bold px-5 py-3 rounded-xl transition-colors">
+                <Link href={`/voter/${candidat.slug}`} className="inline-flex w-full items-center justify-center gap-2 bg-[#1B2A6B] hover:bg-[#162058] text-white font-bold px-5 py-3 rounded-xl transition-colors">
                   Voter pour ce projet
                   <ArrowRight className="w-4 h-4" />
                 </Link>
@@ -236,7 +236,7 @@ export default async function CandidatProjetPage({ params }: { params: Promise<{
           <div className="space-y-2">
             <Link
               href={`/voter/${candidat.slug}`}
-              className="flex items-center justify-center gap-2 w-full bg-[#F5A623] hover:bg-[#e09516] text-[#1B2A6B] font-bold py-2.5 rounded-lg transition-colors text-sm"
+              className="flex items-center justify-center gap-2 w-full bg-[#1B2A6B] hover:bg-[#162058] text-white font-bold py-2.5 rounded-lg transition-colors text-sm"
             >
               <Vote className="w-4 h-4" />
               Voter

@@ -96,7 +96,7 @@ export default function CandidatCard({
           <div className="mt-4 space-y-2">
             <Link
               href={`/voter/${slug}`}
-              className="flex items-center justify-center gap-2 w-full bg-[#F5A623] hover:bg-[#e09516] text-[#1B2A6B] text-sm font-bold py-2.5 rounded-lg transition-colors"
+              className="flex items-center justify-center gap-2 w-full bg-[#1B2A6B] hover:bg-[#162058] text-white text-sm font-bold py-2.5 rounded-lg transition-colors"
             >
               <Vote className="w-4 h-4" />
               Voter ce candidat
