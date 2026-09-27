@@ -184,7 +184,7 @@ export default async function CandidatPage({
 
         {/* Partager */}
         <div className="mx-4 mt-4">
-          <ShareButton nom={candidat.nom} slug={candidat.slug} />
+          <ShareButton nom={candidat.nom} slug={candidat.slug} imageUrl={candidat.photo} />
         </div>
       </div>
 
@@ -227,7 +227,7 @@ export default async function CandidatPage({
               </p>
             </div>
 
-            <ShareButton nom={candidat.nom} slug={candidat.slug} />
+            <ShareButton nom={candidat.nom} slug={candidat.slug} imageUrl={candidat.photo} />
           </div>
 
           {/* Colonne droite */}
