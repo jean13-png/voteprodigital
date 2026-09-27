@@ -1,9 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Vote, Trophy } from "lucide-react";
+import { Vote, Trophy, Eye } from "lucide-react";
 import DomaineBadge from "@/components/ui/DomaineBadge";
 import { VOTE_OBJECTIF } from "@/lib/constants";
-
 interface CandidatCardProps {
   rank: number;
   slug: string;
@@ -13,19 +12,16 @@ interface CandidatCardProps {
   domaine: string;
   totalVotes: number;
 }
-
 const rankColors: Record<number, string> = {
   1: "bg-yellow-400 text-yellow-900",
   2: "bg-gray-300 text-gray-700",
   3: "bg-amber-600 text-amber-100",
 };
-
 const rankLabels: Record<number, string> = {
   1: "1er",
   2: "2e",
   3: "3e",
 };
-
 export default function CandidatCard({
   rank,
   slug,
@@ -39,9 +35,8 @@ export default function CandidatCard({
   const displayPhoto = photoAffiche || photo;
   const rankBadgeClass =
     rankColors[rank] ?? "bg-[#1B2A6B]/10 text-[#1B2A6B]";
-
   return (
-    <Link href={`/candidat/${slug}`} className="group block">
+    <div className="group block">
       <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md hover:border-gray-200 transition-all duration-200">
         {/* Photo */}
         <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
@@ -60,7 +55,6 @@ export default function CandidatCard({
               </span>
             </div>
           )}
-
           {/* Rang - 1er, 2e, 3e seulement */}
           {rank <= 3 && (
             <div
@@ -74,14 +68,12 @@ export default function CandidatCard({
             </div>
           )}
         </div>
-
         {/* Infos */}
         <div className="p-4">
           <h3 className="font-bold text-[#1B2A6B] text-base mb-1 line-clamp-1">
             {nom}
           </h3>
           <DomaineBadge domaine={domaine} />
-
           {/* Compteur votes */}
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs text-gray-500 mb-1.5">
@@ -100,18 +92,25 @@ export default function CandidatCard({
               />
             </div>
           </div>
-
-          {/* Bouton projet */}
-          <div className="mt-3 flex gap-2">
+          {/* Boutons - Voter en priorité, Voir projet en secondaire */}
+          <div className="mt-4 space-y-2">
+            <Link
+              href={`/voter/${slug}`}
+              className="flex items-center justify-center gap-2 w-full bg-[#F5A623] hover:bg-[#e09516] text-[#1B2A6B] text-sm font-bold py-2.5 rounded-lg transition-colors"
+            >
+              <Vote className="w-4 h-4" />
+              Voter ce candidat
+            </Link>
             <Link
               href={`/candidat/${slug}/projet`}
-              className="flex-1 bg-[#1B2A6B] hover:bg-[#162058] text-white text-sm font-semibold py-2 rounded-lg transition-colors text-center"
+              className="flex items-center justify-center gap-2 w-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold py-2 rounded-lg transition-colors"
             >
+              <Eye className="w-3.5 h-3.5" />
               Voir le projet
             </Link>
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

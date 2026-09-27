@@ -4,8 +4,7 @@ import Image from "next/image";
 import { getCandidateBySlug, VOTE_PRICE } from "@/lib/db-queries";
 import DomaineBadge from "@/components/ui/DomaineBadge";
 import VoteForm from "./VoteForm";
-import { ArrowLeft } from "lucide-react";
-
+import { ArrowLeft, Eye } from "lucide-react";
 export async function generateMetadata({
   params,
 }: {
@@ -14,12 +13,10 @@ export async function generateMetadata({
   const { slug } = await params;
   const candidat = await getCandidateBySlug(slug);
   if (!candidat) return { title: "Voter — ProDigital Center" };
-
   const BASE_URL = process.env.NEXTAUTH_URL ?? "https://voteprodigital.vercel.app";
   const title = `Voter pour ${candidat.nom} — ProDigital Center 🗳️`;
   const description = `Soutenez ${candidat.nom} en votant maintenant ! 1 vote = ${VOTE_PRICE} FCFA. Bootcamp Digital Academy 2026.`;
   const image = candidat.photo ?? `${BASE_URL}/images/logo.jpeg`;
-
   return {
     title,
     description,
@@ -40,7 +37,6 @@ export async function generateMetadata({
     },
   };
 }
-
 export default async function VoterPage({
   params,
 }: {
@@ -48,9 +44,7 @@ export default async function VoterPage({
 }) {
   const { slug } = await params;
   const candidat = await getCandidateBySlug(slug);
-
   if (!candidat) notFound();
-
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Breadcrumb */}
@@ -65,16 +59,15 @@ export default async function VoterPage({
           </Link>
         </div>
       </div>
-
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Récap candidat */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 sticky top-20">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 sticky top-20 space-y-4">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 Vous votez pour
               </p>
-              <div className="flex items-center gap-4 mb-4">
+              <div className="flex items-center gap-4">
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-gray-100 shrink-0">
                   {candidat.photo ? (
                     <Image
@@ -113,31 +106,17 @@ export default async function VoterPage({
                   </span>
                 </div>
               </div>
-
-              {/* MODE MANUEL DÉSACTIVÉ — numéros de paiement Mobile Money
-              <div className="mt-4 bg-[#1B2A6B]/5 rounded-xl p-4">
-                <p className="text-xs font-semibold text-[#1B2A6B] mb-3 uppercase tracking-wide">
-                  Numéros de paiement
-                </p>
-                <div className="space-y-2.5 text-sm">
-                  <div>
-                    <p className="text-gray-500 text-xs">MTN Mobile Money</p>
-                    <p className="font-bold text-[#1B2A6B]">+229 01 XX XX XX XX</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-xs">Moov Money</p>
-                    <p className="font-bold text-[#1B2A6B]">+229 01 XX XX XX XX</p>
-                  </div>
-                  <div className="pt-1 border-t border-[#1B2A6B]/10">
-                    <p className="text-gray-500 text-xs">Bénéficiaire</p>
-                    <p className="font-bold text-[#1B2A6B]">ProDigital Center</p>
-                  </div>
-                </div>
-              </div>
-              */}
+              
+              {/* Lien "Voir son projet" */}
+              <Link
+                href={`/candidat/${slug}/projet`}
+                className="flex items-center justify-center gap-2 w-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold py-2.5 rounded-lg transition-colors"
+              >
+                <Eye className="w-4 h-4" />
+                Voir son projet
+              </Link>
             </div>
           </div>
-
           {/* Formulaire */}
           <div className="lg:col-span-3">
             <div className="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8">
