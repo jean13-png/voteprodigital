@@ -46,8 +46,8 @@ export default function VoteForm({ candidatId, candidatSlug }: VoteFormProps) {
       errs.nombreVotes = "Veuillez entrer un nombre de votes.";
     } else if (!Number.isInteger(data.nombreVotes) || data.nombreVotes < 2) {
       errs.nombreVotes = "Le nombre de votes doit être au moins 2 (100 FCFA minimum).";
-    } else if (data.nombreVotes > 100) {
-      errs.nombreVotes = "Maximum 100 votes par transaction.";
+    } else if (data.nombreVotes > 1000) {
+      errs.nombreVotes = "Maximum 1000 votes par transaction.";
     }
     return errs;
   }
@@ -171,7 +171,7 @@ export default function VoteForm({ candidatId, candidatSlug }: VoteFormProps) {
             name="nombreVotes"
             type="number"
             min={2}
-            max={100}
+            max={1000}
             value={nombreVotes}
             onChange={(e) => {
               const val = e.target.value;
@@ -200,7 +200,7 @@ export default function VoteForm({ candidatId, candidatSlug }: VoteFormProps) {
         </div>
         {errors.nombreVotes && <p className="mt-1 text-xs text-red-600">{errors.nombreVotes}</p>}
         <div className="flex flex-wrap gap-2 mt-2">
-          {[2, 5, 10, 20, 50, 100].map((n) => (
+          {[2, 5, 10, 20, 50, 100, 200, 500, 800, 1000].map((n) => (
             <button
               key={n}
               type="button"
