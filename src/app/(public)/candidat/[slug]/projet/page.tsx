@@ -63,20 +63,57 @@ export default async function CandidatProjetPage({ params }: { params: Promise<{
   const projectLinks = parseProjectLinks(candidat.projectLinks);
   const BASE_URL = process.env.NEXTAUTH_URL ?? "https://voteprodigital.vercel.app";
   const projectPageUrl = `${BASE_URL}/candidat/${slug}/projet`;
+  const candidatPhoto = candidat.photo || "/images/logo.jpeg";
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 pb-24 lg:pb-8">
+    <div className="min-h-screen bg-gray-50 py-8 px-4 pb-32 lg:pb-8">
       <div className="max-w-5xl mx-auto">
         <Link href={`/candidat/${candidat.slug}`} className="inline-flex items-center gap-2 text-sm text-[#1B2A6B] hover:text-[#F5A623] transition-colors mb-6">
           <ArrowLeft className="w-4 h-4" /> Retour au profil
         </Link>
+
+        {/* === BANNEAU CANDIDAT (Mobile + Desktop) === */}
+        <div className="mb-6 bg-gradient-to-r from-[#1B2A6B] to-[#162058] rounded-2xl p-6 text-white flex items-center gap-4">
+          <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-black/20 shrink-0">
+            <Image
+              src={candidatPhoto}
+              alt={candidat.nom}
+              fill
+              className="object-cover"
+              sizes="64px"
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg md:text-xl font-bold">{candidat.nom}</h2>
+            <DomaineBadge domaine={candidat.domaine} />
+            <p className="text-sm text-white/80 mt-1">
+              <span className="font-semibold text-[#F5A623]">{Number(candidat.totalVotes).toLocaleString("fr-FR")}</span> votes
+            </p>
+          </div>
+        </div>
         
         <div className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-sm">
           <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
             {/* Contenu principal - Gauche */}
             <div className="p-6 md:p-8">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#F5A623] mb-3">Projet</p>
-              <h1 className="text-3xl md:text-4xl font-extrabold text-[#1B2A6B] mb-4">{projectTitle}</h1>
+              <h1 className="text-3xl md:text-4xl font-extrabold text-[#1B2A6B] mb-6">{projectTitle}</h1>
+              
+              {/* Image du candidat - Accent gauche */}
+              {candidatPhoto && (
+                <div className="float-right ml-6 mb-4 md:ml-8 md:mb-6 w-48 hidden md:block">
+                  <div className="relative aspect-[3/4] rounded-xl overflow-hidden border-4 border-[#1B2A6B] shadow-lg">
+                    <Image
+                      src={candidatPhoto}
+                      alt={`Photo de ${candidat.nom}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 1024px) 100vw, 25vw"
+                    />
+                  </div>
+                </div>
+              )}
+              
               <p className="text-gray-600 leading-relaxed whitespace-pre-line">{projectDescription}</p>
               
               {youtubeId ? (
@@ -160,6 +197,7 @@ export default async function CandidatProjetPage({ params }: { params: Promise<{
                   candidatNom={candidat.nom}
                   projectTitle={projectTitle}
                   projectPageUrl={projectPageUrl}
+                  candidatPhoto={candidatPhoto}
                   showDesktopWhatsApp={true}
                 />
               </div>
@@ -191,6 +229,17 @@ export default async function CandidatProjetPage({ params }: { params: Promise<{
           </div>
         </div>
 
+        {/* === MOBILE: Sticky Vote Button Footer === */}
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-2xl">
+          <Link
+            href={`/voter/${candidat.slug}`}
+            className="flex items-center justify-center gap-2 w-full bg-[#1B2A6B] hover:bg-[#162058] text-white font-bold py-3 rounded-lg transition-colors"
+          >
+            <Vote className="w-5 h-5" />
+            Voter ce projet
+          </Link>
+        </div>
+
         {/* === MOBILE: Aperçu + Actions en bas === */}
         <div className="lg:hidden mt-6 bg-white rounded-2xl border border-gray-100 p-5">
           {/* Aperçu candidat */}
@@ -199,7 +248,7 @@ export default async function CandidatProjetPage({ params }: { params: Promise<{
             <div className="flex items-center gap-3">
               <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-200 shrink-0">
                 <Image
-                  src={candidat.photo || "/images/logo.jpeg"}
+                  src={candidatPhoto}
                   alt={candidat.nom}
                   fill
                   className="object-cover"
@@ -215,18 +264,12 @@ export default async function CandidatProjetPage({ params }: { params: Promise<{
 
           {/* Actions */}
           <div className="space-y-2">
-            <Link
-              href={`/voter/${candidat.slug}`}
-              className="flex items-center justify-center gap-2 w-full bg-[#1B2A6B] hover:bg-[#162058] text-white font-bold py-2.5 rounded-lg transition-colors text-sm"
-            >
-              <Vote className="w-4 h-4" />
-              Voter
-            </Link>
             <ProjectActions
               candidatSlug={candidat.slug}
               candidatNom={candidat.nom}
               projectTitle={projectTitle}
               projectPageUrl={projectPageUrl}
+              candidatPhoto={candidatPhoto}
             />
           </div>
         </div>

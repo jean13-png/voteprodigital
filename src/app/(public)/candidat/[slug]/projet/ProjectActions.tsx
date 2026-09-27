@@ -1,12 +1,14 @@
 "use client";
 
 import { Share2 } from "lucide-react";
+import Image from "next/image";
 
 interface ProjectActionsProps {
   candidatSlug: string;
   candidatNom: string;
   projectTitle: string;
   projectPageUrl: string;
+  candidatPhoto: string;
   showDesktopWhatsApp?: boolean;
 }
 
@@ -15,6 +17,7 @@ export default function ProjectActions({
   candidatNom,
   projectTitle,
   projectPageUrl,
+  candidatPhoto,
   showDesktopWhatsApp = false,
 }: ProjectActionsProps) {
   const handleWhatsAppShare = () => {
@@ -22,6 +25,8 @@ export default function ProjectActions({
     const text = encodeURIComponent(
       `Découvrez le projet de ${candidatNom} 🚀\n\n${projectTitle}\n\nVotez pour soutenir ce projet !\n\n${url}`
     );
+    // Open WhatsApp with a preview image meta tag in the URL
+    // Note: WhatsApp will fetch the page and extract og:image for preview
     window.open(`https://wa.me/?text=${text}`, "_blank");
   };
 
