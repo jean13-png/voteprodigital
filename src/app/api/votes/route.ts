@@ -54,9 +54,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (normalizedNombreVotes < 2 || normalizedNombreVotes > 100) {
+    if (normalizedNombreVotes < 2 || normalizedNombreVotes > 1000) {
       return NextResponse.json(
-        { error: "Le nombre de votes doit être entre 2 et 100. Le minimum est de 2 votes (100 FCFA)." },
+        { error: "Le nombre de votes doit être entre 2 et 1000. Le minimum est de 2 votes (100 FCFA)." },
         { status: 400 }
       );
     }
